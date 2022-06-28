@@ -108,6 +108,18 @@ function OUT = chiplot(S,DEM,A,varargin)
 % update 4. October, 2016
 % lets you choose the algorithm to find the optimal value of mn. 
 
+ax      = gca;
+
+if verLessThan('matlab','8.4')
+    % For MATLAB versions before 2014b
+    clr = 'b';
+else
+    % For MATLAB versions with the new graphics engine
+    colororderindex = mod(ax.ColorOrderIndex, size(ax.ColorOrder,1));
+    if colororderindex==0; colororderindex=size(ax.ColorOrder,1); end
+    clr = ax.ColorOrder(colororderindex,:);
+end
+
 % Parse Inputs
 p = inputParser;         
 p.FunctionName = 'chiplot';
@@ -115,6 +127,8 @@ addRequired(p,'S',@(x) isa(x,'STREAMobj'));
 addRequired(p,'DEM', @(x) isa(x,'GRIDobj') || isequal(size(S.IXgrid),size(x)));
 addRequired(p,'A', @(x) isa(x,'GRIDobj') || isequal(size(S.IXgrid),size(x)))
 
+addParamValue(p,'color',clr);
+addParamValue(p,'colorMainTrunk',clr);
 addParamValue(p,'mn',[],@(x) isscalar(x) || isempty(x));
 addParamValue(p,'trunkstream',[],@(x) isa(x,'STREAMobj') || isempty(x));
 addParamValue(p,'plot',true,@(x) isscalar(x));
@@ -130,6 +144,8 @@ S     = p.Results.S;
 DEM   = p.Results.DEM;
 A     = p.Results.A;
 fitto = p.Results.fitto;
+color = p.Results.color;
+colorMainTrunk = p.Results.colorMainTrunk;
 betamethod = validatestring(p.Results.betamethod,{'ls','lad'});
 mnmethod   = validatestring(p.Results.mnmethod,{'ls','lad'});
 
@@ -261,7 +277,7 @@ if p.Results.plot
     zz    = nan(size(order));
     zz(I) = zx(order(I));
     
-    plot(c,zz,'-','color',[.5 .5 .5]);
+    plot(c,zz,'-','color', color);
     hold on
 
     if ~isempty( p.Results.trunkstream )
@@ -291,7 +307,7 @@ if p.Results.plot
         zz    = nan(size(order));
         zz(I) = zxfit(order(I));
 
-        plot(c,zz,'k-','LineWidth',2);
+        plot(c,zz,'color', colorMainTrunk,'LineWidth',2);
     end
     
     refline(beta,zb);
