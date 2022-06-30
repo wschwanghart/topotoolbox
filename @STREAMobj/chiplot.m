@@ -45,11 +45,16 @@ function OUT = chiplot(S,DEM,A,varargin)
 %     also that the standard deviation of beta (betase) is determined
 %     independently from mn.
 %     
+%     'color': color of river profiles, e.g. 'b' or [.4 .4 .6]
+%
 %     'trunkstream': {[]}, STREAMobj
 %     instance of STREAMobj that must be a subset of S, e.g. the main river
 %     in the network S. The main trunk is highlighted in the plot and can
 %     be used to fit the mn ratio (see pn/pv pair 'fitto'). Note that the
 %     trunkstream must end at the river network's root (outlet).
+%
+%     'colorMainTrunk': color of the trunk stream, e.g. 'b' or [.4 .4 .6].
+%     Applies only if 'trunkstream' (see above) is supplied.
 %
 %     'fitto': {'all'},'ts', 
 %     choose which data should be used for fitting the mn ratio.
@@ -92,7 +97,6 @@ function OUT = chiplot(S,DEM,A,varargin)
 % See also: flowpathapp, STREAMobj, FLOWobj/flowacc, STREAMobj/trunk,
 %           STREAMobj/modify, STREAMobj/getnal, STREAMobj/chitransform
 %
-%
 % References:
 %     
 %     Perron, J. & Royden, L. (2013): An integral approach to bedrock river 
@@ -100,13 +104,16 @@ function OUT = chiplot(S,DEM,A,varargin)
 %     [DOI: 10.1002/esp.3302]
 %     
 %
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 11. June, 2014
+% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de) and 
+% %       Karina Marques (https://github.com/karina-marques)
+% Date: 30. June, 2022
 
 % update 11. June, 2014
 % supports node attribute lists as input data (DEM,A)
 % update 4. October, 2016
 % lets you choose the algorithm to find the optimal value of mn. 
+% update 30. June, 2022
+% added options to color the output by Karina Marques 
 
 ax      = gca;
 
