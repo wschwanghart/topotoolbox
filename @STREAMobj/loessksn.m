@@ -1,4 +1,4 @@
-function k = loessksn(S,DEM,A,varargin)
+function [k,zhat] = loessksn(S,DEM,A,varargin)
 
 %LOESSKSN Loess-smoothed river steepness
 %
@@ -113,12 +113,17 @@ d = chitransform(S,a,'a0',p.Results.a0,'mn',p.Results.mn);
 [i,j]  = find(M);
 NEIGHS = accumarray(i,j,[n 1],@(x){x});
 
-k = cellfun(@(i,j) wregress(i,j),num2cell((1:n)'),NEIGHS);
+if nargout == 1
+    k = cellfun(@(i,j) wregress(i,j),num2cell((1:n)'),NEIGHS);
+else
+    [k,zhat] = cellfun(@(i,j) wregress(i,j),num2cell((1:n)'),NEIGHS);
+end
 
-function b = wregress(ix,ixc)
+function [b,zhat] = wregress(ix,ixc)
     dij = d(ixc);
     if numel(dij)<=2
         b = 0;
+        zhat = z(ix);
         return
     end
 
@@ -134,8 +139,11 @@ function b = wregress(ix,ixc)
     nr  = numel(ixc);
     W   = spdiags(sqrt(wij),0,nr,nr);
     b   = (W*[ones(nr,1) dij])\(W*zij);
+%     if nargout == 2
+        zhat = [1 d(ix)]*b;
+%     end
+
     b   = b(2);
-    % b   = [1 d(ix)]*b;
 
 end
 end
