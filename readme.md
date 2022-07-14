@@ -113,6 +113,10 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 ***
 ## Version History
 
+### pre 2.5
+
+- new function: GRIDobj/randomsample - Create a spatially uniform sample based on a GRIDobj
+
 ### 2.4
 
 - HyLands 1.0 added: see paper: Campforts, B. et al. (2020): HyLands 1.0: a Hybrid Landscape evolution 
