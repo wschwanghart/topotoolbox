@@ -116,6 +116,7 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 ### pre 2.5
 
 - new function: GRIDobj/randomsample - Create a spatially uniform sample based on a GRIDobj
+- new function: tthelp - Search for keywords on the TopoToolbox blog
 
 ### 2.4
 
