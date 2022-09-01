@@ -1,4 +1,4 @@
-function [mdl,int,rts] = fitloglinear(P,c,varargin)
+function [mdl,int,rts,rtssigma] = fitloglinear(P,c,varargin)
 
 %FITLOGLINEAR fit loglinear model to point pattern
 %
@@ -6,12 +6,15 @@ function [mdl,int,rts] = fitloglinear(P,c,varargin)
 %
 %     [mdl,int] = fitloglinear(P,c)
 %     [mdl,int] = fitloglinear(P,c,pn,pv,...)
-%     [mdl,int,mx] = ...
+%     [mdl,int,mx,sigmamx] = fitloglinear(P,c,'modelspec','poly2',...)
 %
 % Description
 %
 %     Loglinear models embrace numerous models that can be fitted to
 %     homogeneous and inhomogeneous Poisson processes on river networks. 
+%     fitloglinear fits a model via logistic regression. Note that this
+%     requires that no duplicate points exist. fitloglinear uses fitglm
+%     to fit the logistic regression model.
 %
 % Input arguments
 %
@@ -23,17 +26,18 @@ function [mdl,int,rts] = fitloglinear(P,c,varargin)
 %     'stepwise'   {false} or true. If true, fitloglinear uses stepwiseglm
 %                  to fit the model.
 %     'modelspec'  see fitglm. For example, for fitting a forth-order
-%                  polynomial of one covariate: 'poly4'
+%                  polynomial: 'poly4'
 %     
 %     In addition, fitloglinear accepts parameter name/value pairs of
 %     fitglm or stepwiseglm.
 %
 % Output arguments
 %
-%     mdl    model (GeneralizedLinearModel)
-%     int    node-attribute list with modelled intensities
-%     mx     for higher-order polynomials of a single-variable model, 
-%            mx returns the location of maxima in the intensity function. 
+%     mdl      model (GeneralizedLinearModel)
+%     int      node-attribute list with modelled intensities
+%     mx       for second-order polynomials of a single-variable model, 
+%              mx returns the location of maximum in the intensity function.
+%     sigmamx  the standard error of the location of the maximum
 %     
 % Example: Create an inhomogeneous Poisson process with the intensity being 
 %          a function of elevation. Simulate a random point pattern and fit
@@ -59,7 +63,7 @@ function [mdl,int,rts] = fitloglinear(P,c,varargin)
 % See also: PPS, PPS/random, fitglm, stepwiseglm
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 15. September, 2021 
+% Date: 1. September, 2022 
 
 p = inputParser;
 p.KeepUnmatched = true;
@@ -121,31 +125,79 @@ d   = distance(P.S,'node_to_node');
 d   = mean(d);
 int = p./d; %.cellsize;
 
-if nargout == 3
-    if mdl.NumPredictors ~= 1
-        rts = [];
+if nargout >= 3
+    switch lower(fllopts.modelspec) 
+        case 'poly2'
+        otherwise
+            rts = [];
+            rtssigma = [];
+            warning('TopoToolbox:fitloglinear',...
+                ['Third and forth output only available if\n' ...
+                 'model has one variable and modelspec is poly2.'])
         return
     end
-    
-    coeffs = mdl.Coefficients.Estimate(1:end);
-    coeffs = flipud(coeffs);
-    % first derivative
-    p1     = polyder(coeffs);
-    % p1     = coeffs.*(numel(coeffs):-1:1)';
-    % minima and maxima
-    rts    = roots(p1);
-    if isempty(rts)
-        % there are no minima or maxima
-    else
-        % second derivative
-        p2     = polyder(p1);
-        % p2     = p1(1:end-1).*((numel(coeffs)-1):-1:1)';
-        y      = polyval(p2,rts);
-        rts    = rts(y<0);
-    end
-end
 
+    % Coefficient of x
+    b1 = mdl.Coefficients.Estimate(2);
+	% Coefficient of x^2
+    b2 = mdl.Coefficients.Estimate(3);
+	% Covariance matrix
+    C  = mdl.CoefficientCovariance(2:3,2:3);
+
+    % Location of the maximum
+	% b1 + 2*b2*x = 0
+    rts = -0.5*b1/b2;
+    
+	% Standard errors of coefficients
+    sb1 = mdl.Coefficients.SE(2);
+    sb2 = mdl.Coefficients.SE(3);
+	% 
+    rtssigma = sqrt(((sb1/b1)^2 + (sb2/b2)^2 - 2*C(2,1)/(b1*b2)))*rts;
 end
+end
+    
+    
+%     coeffs = mdl.Coefficients.Estimate(1:end);
+%     rts    = getroot(coeffs);
+%     
+%     % Monte-Carlo simulation to get roots
+%     gm = gmdistribution(coeffs',mdl.CoefficientCovariance);
+%     nsamples = 1000;
+%     coeffs = random(gm,nsamples);
+%     rtsint = nan(nsamples,(size(coeffs,2)-1)/2);
+%     
+%     for r = 1:nsamples
+%         rtssim = getroot(coeffs(r,:));
+%         if ~isempty(rtssim)
+%             rtsint(r,1:numel(rtssim)) = rtssim;
+%         end
+%     end
+%         
+%     
+%     
+% end
+% 
+% end
+% 
+% function rts = getroot(coeffs)
+% 
+%     coeffs = coeffs(end:-1:1);
+%     % first derivative
+%     p1     = polyder(coeffs);
+% 
+%     % minima and maxima
+%     rts    = roots(p1);
+%     if isempty(rts)
+%         % there are no minima or maxima
+%     else
+%         % second derivative
+%         p2     = polyder(p1);
+%         y      = polyval(p2,rts);
+%         rts    = rts(y<0);
+%     end
+%     
+%     
+% end
 
 function pnpv = expandstruct(s)
 
