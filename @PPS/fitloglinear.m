@@ -1,12 +1,12 @@
-function [mdl,int,rts,rtssigma] = fitloglinear(P,c,varargin)
+function [mdl,int,rts,rtssigma,ismx] = fitloglinear(P,c,varargin)
 
-%FITLOGLINEAR fit loglinear model to point pattern
+%FITLOGLINEAR Fit loglinear model to point pattern
 %
 % Syntax
 %
 %     [mdl,int] = fitloglinear(P,c)
 %     [mdl,int] = fitloglinear(P,c,pn,pv,...)
-%     [mdl,int,mx,sigmamx] = fitloglinear(P,c,'modelspec','poly2',...)
+%     [mdl,int,mx,sigmamx,ismx] = fitloglinear(P,c,'modelspec','poly2',...)
 %
 % Description
 %
@@ -38,6 +38,8 @@ function [mdl,int,rts,rtssigma] = fitloglinear(P,c,varargin)
 %     mx       for second-order polynomials of a single-variable model, 
 %              mx returns the location of maximum in the intensity function.
 %     sigmamx  the standard error of the location of the maximum
+%     ismx     true or false. True, if mx is a maximum, and false
+%              otherwise.
 %     
 % Example: Create an inhomogeneous Poisson process with the intensity being 
 %          a function of elevation. Simulate a random point pattern and fit
@@ -63,7 +65,7 @@ function [mdl,int,rts,rtssigma] = fitloglinear(P,c,varargin)
 % See also: PPS, PPS/random, fitglm, stepwiseglm
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 1. September, 2022 
+% Date: 5. September, 2022 
 
 p = inputParser;
 p.KeepUnmatched = true;
@@ -125,12 +127,16 @@ d   = distance(P.S,'node_to_node');
 d   = mean(d);
 int = p./d; %.cellsize;
 
+
+% -----------------------------------------------------------------------
+% ---- If model is poly2, then calculate the location of the maximum 
 if nargout >= 3
     switch lower(fllopts.modelspec) 
         case 'poly2'
         otherwise
             rts = [];
             rtssigma = [];
+            ismx = [];
             warning('TopoToolbox:fitloglinear',...
                 ['Third and forth output only available if\n' ...
                  'model has one variable and modelspec is poly2.'])
@@ -153,52 +159,15 @@ if nargout >= 3
     sb2 = mdl.Coefficients.SE(3);
 	% 
     rtssigma = sqrt(((sb1/b1)^2 + (sb2/b2)^2 - 2*C(2,1)/(b1*b2)))*rts;
-end
-end
     
-    
-%     coeffs = mdl.Coefficients.Estimate(1:end);
-%     rts    = getroot(coeffs);
-%     
-%     % Monte-Carlo simulation to get roots
-%     gm = gmdistribution(coeffs',mdl.CoefficientCovariance);
-%     nsamples = 1000;
-%     coeffs = random(gm,nsamples);
-%     rtsint = nan(nsamples,(size(coeffs,2)-1)/2);
-%     
-%     for r = 1:nsamples
-%         rtssim = getroot(coeffs(r,:));
-%         if ~isempty(rtssim)
-%             rtsint(r,1:numel(rtssim)) = rtssim;
-%         end
-%     end
-%         
-%     
-%     
-% end
-% 
-% end
-% 
-% function rts = getroot(coeffs)
-% 
-%     coeffs = coeffs(end:-1:1);
-%     % first derivative
-%     p1     = polyder(coeffs);
-% 
-%     % minima and maxima
-%     rts    = roots(p1);
-%     if isempty(rts)
-%         % there are no minima or maxima
-%     else
-%         % second derivative
-%         p2     = polyder(p1);
-%         y      = polyval(p2,rts);
-%         rts    = rts(y<0);
-%     end
-%     
-%     
-% end
+    % Determine whether maximum is really a maximum or a minimum
+    ismx = b2 < 0;
 
+end
+end
+
+% -----------------------------------------------------------------------
+% Function expandstruct
 function pnpv = expandstruct(s)
 
 pn = fieldnames(s);
