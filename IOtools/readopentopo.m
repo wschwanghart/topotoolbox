@@ -85,7 +85,7 @@ function DEM = readopentopo(varargin)
 % Reference: http://www.opentopography.org/developers
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 21. May, 2021
+% Date: 26. September, 2022
 
 
 p = inputParser;
@@ -161,17 +161,29 @@ end
 % now we have an extent. Or did the user request interactively choosing
 % the extent.
 if any([isempty(west) isempty(east) isempty(south) isempty(north)]) || p.Results.interactive
-    wm = webmap;
-    % get dialog box
-    messagetext = ['Zoom and resize the webmap window to choose DEM extent. ' ...
-                         'Click the close button when you''re done.'];
-    d = waitdialog(messagetext);
-    uiwait(d);    
-    [latlim,lonlim] = wmlimits(wm);
-    west = lonlim(1);
-    east = lonlim(2);
-    south = latlim(1);
-    north = latlim(2);
+    if p.Results.interactive == 2
+        wm = webmap;
+        % get dialog box
+        messagetext = ['Zoom and resize the webmap window to choose DEM extent. ' ...
+            'Click the close button when you''re done.'];
+        d = waitdialog(messagetext);
+        uiwait(d);
+        [latlim,lonlim] = wmlimits(wm);
+        west = lonlim(1);
+        east = lonlim(2);
+        south = latlim(1);
+        north = latlim(2);
+    else
+        ext = chooseregion;
+        if isempty(ext)
+            DEM = [];
+            return
+        end
+        west = ext(2);
+        east = ext(4);
+        south = ext(1);
+        north = ext(3);
+    end
 end
     
 if p.Results.verbose
