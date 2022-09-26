@@ -27,7 +27,7 @@ classdef subplotlabel < handle
 %     Parameter name/value pairs
 % 
 %     'Location'    one of the following values: {'northwest'}, 'southwest', 
-%                   'northeast', 'southeast'.
+%                   'northeast', 'southeast', 'northwestoutside'
 %     'FontSize'    14
 %     'FontWeight'  {'normal'} or 'bold'
 %     'FontAngle'   {'normal'} or 'italic'
@@ -186,6 +186,11 @@ classdef subplotlabel < handle
                         IXY = 1;
                         valign = 'bottom';
                         halign = 'right';
+                    case {'northwestoutside'}
+                        IXX = 1;
+                        IXY = 2;
+                        valign = 'bottom';
+                        halign = 'left';
                 end
                 
                 locx = xl(IXX);
