@@ -1,15 +1,15 @@
-function ext = chooseregion(varargin)
+function ext = roipicker(varargin)
 
-%CHOOSEREGION Choose region in geoaxes
+%ROIPICKER Choose region in geoaxes
 %
 % Syntax
 %
-%     ext = chooseregion
-%     ext = chooseregion(pn,pv)
+%     ext = roipicker
+%     ext = roipicker(pn,pv)
 %
 % Description
 %
-%     chooseregion opens a GUI which lets user choose a rectangle extent in
+%     roipicker opens a GUI which lets user choose a rectangle extent in
 %     a global map. The function stops execution until an extent is
 %     retrieved and returns the extent. 
 %
@@ -24,14 +24,15 @@ function ext = chooseregion(varargin)
 %
 % Authors:  Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
 %
-% Date: 25. September, 2022
+% Date: 27. September, 2022
 
 % Parse inputs 
 p = inputParser;
-p.FunctionName = 'chooseregion';
+p.FunctionName = 'roipicker';
 addParameter(p,'basemap','topographic')
 addParameter(p,'ellipsoid',referenceSphere('earth','km'));
 addParameter(p,'ask',true)
+addParameter(p,'drawingarea',[-90 -180 180 360])
 parse(p,varargin{:})
 
 % Define ext 
@@ -90,7 +91,7 @@ dd1 = uidropdown(grid1,'Editable','off','Items',items,...
 % Labels to display information about
 lbl1 = uilabel(grid1,"Text",'Area = NaN', 'Interpreter','html',...
     'FontName','Arial');
-lbl2 = uilabel(grid1,"Text",'Area = NaN');
+lbl2 = uilabel(grid1,"Text",'Extent = NaN');
 
 if p.Results.ask
 cfig.CloseRequestFcn = @my_closereq;
@@ -121,7 +122,7 @@ waitfor(b5,'UserData');
             b4.Enable = false;
             b5.Enable = false;
 
-            roi = drawrectangle(gx,'DrawingArea',[-90 -180 180 360],...
+            roi = drawrectangle(gx,'DrawingArea',p.Results.drawingarea,...
                 'Deletable', false);
             displayarea
             addlistener(roi,'MovingROI',@allevents);
@@ -193,7 +194,7 @@ waitfor(b5,'UserData');
 
         roi = drawrectangle(gx,'Position',[latLimits(1) lonLimits(1) ...
             latLimits(2)-latLimits(1) lonLimits(2)-lonLimits(1)],...
-            'DrawingArea',[-90 -180 180 360]);
+            'DrawingArea',p.Results.drawingarea);
         displayarea
         addlistener(roi,'MovingROI',@allevents);
         addlistener(roi,'ROIMoved',@allevents);

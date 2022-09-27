@@ -174,7 +174,7 @@ if any([isempty(west) isempty(east) isempty(south) isempty(north)]) || p.Results
         south = latlim(1);
         north = latlim(2);
     else
-        ext = chooseregion;
+        ext = roipicker;
         if isempty(ext)
             DEM = [];
             return
