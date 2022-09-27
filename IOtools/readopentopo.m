@@ -1,6 +1,6 @@
 function DEM = readopentopo(varargin)
 
-%READOPENTOPO read DEM using the opentopography.org API
+%READOPENTOPO Read DEM using the opentopography.org API
 %
 % Syntax
 %
@@ -80,7 +80,7 @@ function DEM = readopentopo(varargin)
 %     getoutline(DEM)
 %     hold off
 %
-% See also: GRIDobj, websave
+% See also: GRIDobj, websave, roipicker
 %
 % Reference: http://www.opentopography.org/developers
 %
@@ -107,7 +107,8 @@ demtype = validatestring(p.Results.demtype,...
     {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
      'AW3D30','AW3D30_E','SRTM15Plus',...
      'NASADEM','COP30','COP90'},'readopentopo');
-%url = 'http://portal.opentopography.org/otr/getdem';
+
+% API URL
 url = 'https://portal.opentopography.org/API/globaldem?';
 
 % create output file
@@ -124,7 +125,7 @@ if isempty(p.Results.apikey)
         % Remove trailing blanks, if there are any
         apikey = deblank(apikey);
     else
-        error('The DEM types NASADEM, COP30 and COP90 require an API Key')
+        error('Readopentopo requires an API Key. Please read the help.')
     end
 else
     apikey = p.Results.apikey;
