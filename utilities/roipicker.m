@@ -33,6 +33,7 @@ addParameter(p,'basemap','topographic')
 addParameter(p,'ellipsoid',referenceSphere('earth','km'));
 addParameter(p,'ask',true)
 addParameter(p,'drawingarea',[-90 -180 180 360])
+addParameter(p,'requestlimit',inf) % in km
 parse(p,varargin{:})
 
 % Define ext 
@@ -259,6 +260,13 @@ waitfor(b5,'UserData');
         area    = areaquad(pos(1),pos(2),pos(3),pos(4),p.Results.ellipsoid);
         areastr = ['Area: ' num2str(area,2) ' km<sup>2</sup>'];
         lbl1.Text = areastr;
+        if area > p.Results.requestlimit
+            lbl1.FontColor = 'r';
+            b5.Enable = false;
+        else
+            lbl1.FontColor = 'k';
+            b5.Enable = true;
+        end
         posstr = ['T:' num2str(pos(3)) ' B:' num2str(pos(1)) ...
             ' L:' num2str(pos(2)) ' R:' num2str(pos(4))];
         lbl2.Text = posstr;

@@ -51,6 +51,8 @@ function DEM = readopentopo(varargin)
 %                      'NASADEM':    NASADEM Global DEM 
 %                      'COP30':      Copernicus Global DSM 30m 
 %                      'COP90':      Copernicus Global DSM 90m 
+%                      'EU_DTM:      Continental Europe Digital Terrain 
+%                                    Model 
 %                        
 %                      * requires API Key (see option 'apikey').
 %
@@ -103,10 +105,23 @@ addParameter(p,'verbose',true);
 addParameter(p,'apikey',[]);
 parse(p,varargin{:});
 
-demtype = validatestring(p.Results.demtype,...
-    {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
+validdems = {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
      'AW3D30','AW3D30_E','SRTM15Plus',...
-     'NASADEM','COP30','COP90'},'readopentopo');
+     'NASADEM','COP30','COP90',...
+     'EU_DTM'};
+
+demtype = validatestring(p.Results.demtype,...
+    validdems,'readopentopo');
+
+% Access global topographic datasets including SRTM GL3 (Global 90m), 
+% GL1 (Global 30m), ALOS World 3D and SRTM15+ V2.1 (Global Bathymetry 500m). 
+% Note: Requests are limited to 125,000,000 km2 for SRTM15+ V2.1, 
+% 4,050,000 km2 for SRTM GL3, COP90 and 450,000 km2 for all other data.
+requestlimits = [4.05e6, 0.45e6, 0.45e6, ...
+                 0.45e6, 0.45e6, 125e6,...
+                 0.45e6, 0.45e6, 4.05e6, ...
+                 0.45e6 ]; % km^2
+requestlimit  = requestlimits(strcmp(demtype,validdems));
 
 % API URL
 url = 'https://portal.opentopography.org/API/globaldem?';
@@ -175,7 +190,7 @@ if any([isempty(west) isempty(east) isempty(south) isempty(north)]) || p.Results
         south = latlim(1);
         north = latlim(2);
     else
-        ext = roipicker;
+        ext = roipicker('requestlimit',requestlimit);
         if isempty(ext)
             DEM = [];
             return
