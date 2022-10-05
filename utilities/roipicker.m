@@ -16,6 +16,25 @@ function ext = roipicker(varargin)
 %     If users quit selecting a region by closing one of the windows, ext
 %     will be empty.
 %
+% Input arguments
+%
+%     Following parameter name/value combinations apply
+%
+%     'basemap'        Basemap used in map. Default is 'topographic'. See
+%                      geoaxes for alternatives. Other basemaps can be
+%                      selected within the roipicker GUI.
+%     'ellipsoid'      ellipsoid used for calculating the area of the ROI.
+%                      Default is referenceSphere('earth','km'). There will
+%                      rarely be a need to change this parameter.
+%     'ask'            {true} or false. If true, users will have to confirm 
+%                      if they quit the application without selecting a ROI.
+%     'drawingarea'    By default, the drawing area of the ROI is limited to 
+%                      [-90 -180 180 360]. Adjust the extent with a vector
+%                      containing [latmin lonmin height width].
+%     'requestlimit'   {inf}. Provide a maximum area in km here. If the ROI
+%                      exceeds the request limit, the select button is
+%                      deactivated and the area label is red.
+%
 % Output arguments
 %
 %     ext   [minlat minlon maxlat maxlon]
@@ -24,7 +43,7 @@ function ext = roipicker(varargin)
 %
 % Authors:  Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
 %
-% Date: 27. September, 2022
+% Date: 28. September, 2022
 
 % Parse inputs 
 p = inputParser;
@@ -259,14 +278,17 @@ waitfor(b5,'UserData');
 
         area    = areaquad(pos(1),pos(2),pos(3),pos(4),p.Results.ellipsoid);
         areastr = ['Area: ' num2str(area,2) ' km<sup>2</sup>'];
-        lbl1.Text = areastr;
+        
         if area > p.Results.requestlimit
             lbl1.FontColor = 'r';
             b5.Enable = false;
+            areastr = [areastr ' (ROI too large)'];
         else
             lbl1.FontColor = 'k';
             b5.Enable = true;
         end
+        lbl1.Text = areastr;
+
         posstr = ['T:' num2str(pos(3)) ' B:' num2str(pos(1)) ...
             ' L:' num2str(pos(2)) ' R:' num2str(pos(4))];
         lbl2.Text = posstr;

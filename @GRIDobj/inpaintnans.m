@@ -1,6 +1,6 @@
 function DEM = inpaintnans(DEM,varargin)
 
-%INPAINTNANS interpolate missing values in a grid (GRIDobj)
+%INPAINTNANS Interpolate missing values in a grid (GRIDobj)
 %
 % Syntax
 %
@@ -9,6 +9,7 @@ function DEM = inpaintnans(DEM,varargin)
 %     DEMf = inpaintnans(DEM,type,k,conn)
 %     DEMf = inpaintnans(DEM,DEM2)
 %     DEMf = inpaintnans(DEM,DEM2,method)
+%     DEMf = inpaintnans(DEM,DEM2,'tt','ls',true,'eps',20)
 %
 % Description
 % 
@@ -24,6 +25,19 @@ function DEM = inpaintnans(DEM,varargin)
 %     values using interpolation from another grid. An example is that 
 %     missing values in a SRTM DEM could be filled with values derived from
 %     an ASTER GDEM.
+%
+%     inpaintnans(DEM,DEM2,'tt') uses a hybrid method that uses both
+%     laplacian interpolation and filling using a second DEM. The methods
+%     accounts for potential vertical offsets between both DEMs by fitting
+%     a regression surface to the boundary pixels which is used to adjust 
+%     the second DEM. Missing values are then calculated by the weighted 
+%     average of both techniques whereas higher weights are assigned to 
+%     the laplacian technique if pixels are close to the boundaries of the
+%     voids. Note that this technique will not fill voids connected to the
+%     DEM boundaries.
+%
+%     inpaintnans(DEM,'interactive') starts an interactive tool to map a
+%     region to be filled by laplacian interpolation.
 %
 % Input
 %
@@ -44,6 +58,10 @@ function DEM = inpaintnans(DEM,varargin)
 %                     distance-weighted average from the valid neighbor
 %                     pixels. This approach does not support the third input 
 %                     argument k.
+%               'interactive' (no further arguments): opens new figure and
+%                     enables drawing a polygon which is going to be
+%                     filled. The resulting DEM will be again displayed as
+%                     hillshade.
 %     k         if supplied, only connected components with 
 %               less or equal number of k pixels are filled. Others
 %               remain nan. Set to inf if all pixels enclosed by non-nan
@@ -53,7 +71,19 @@ function DEM = inpaintnans(DEM,varargin)
 %               interpolate from DEM2 to locations of missing values in
 %               DEM. 
 %     method    interpolation method if second input argument is a GRIDobj.
-%               {'linear'},'nearest','spline','pchip', or 'cubic'.
+%               {'linear'},'nearest','spline','pchip', 'cubic', or 'tt'.
+%   
+%     if method is 'tt' then several parameters can be applied
+%
+%     'eps'     parameter of the gaussian radial basis function (pixels). 
+%               Larger values will give higher weight to the Laplacian
+%               interpolation near the boundaries.
+%     'ls'      {true} or false. If true, the function will fit a linear 
+%               least squares model between the two DEMs which will balance
+%               potential vertical offsets.
+%
+%     Note that unlike the other interpolation methods, 'tt' will not fill
+%     nan-regions connected to the DEM boundaries.
 %
 % Output
 %
@@ -70,16 +100,23 @@ function DEM = inpaintnans(DEM,varargin)
 %     imageschs(DEMn,[],'colorbar',false)
 %
 % 
-% See also: ROIFILL, FILLSINKS, BWDIST
+% See also: ROIFILL, FILLSINKS, BWDIST, STREAMobj/inpaintnans
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 3. September, 2018
+% Date: 5. October, 2022
 
 if nargin == 1
     DEM.Z = deminpaint(DEM.Z,varargin{:});
 elseif ischar(varargin{1})
     if strcmpi(varargin{1},'neighbors')
         DEM = interpneighborpixels(DEM);
+        return
+    elseif strcmpi(varargin{1},'interactive')
+        MASK = createmask(DEM,true);
+        DEM.Z(MASK.Z) = nan;
+        DEM = inpaintnans(DEM);
+        DEM.Z(isnan(DEM.Z) & (~MASK.Z)) = nan;
+        imageschs(DEM)
         return
     end
     DEM.Z = deminpaint(DEM.Z,varargin{:});
@@ -94,7 +131,13 @@ elseif isa(varargin{1},'GRIDobj')
     
     switch method
         case 'tt'
-            DEM = ttinpaint(DEM,varargin{1});
+            p   = inputParser;
+            addRequired(p,'DEM2',@(x) isa(x,'GRIDobj'))
+            addRequired(p,'method',@(x) strcmpi(x,'tt'))
+            addParameter(p,'ls',true)
+            addParameter(p,'eps',20);
+            parse(p,varargin{:})
+            DEM = ttinpaint(DEM,varargin{1},p.Results.eps,p.Results.ls);
         otherwise
             INAN = isnan(DEM);
             IX   = find(INAN.Z);
@@ -186,25 +229,60 @@ end
 
 
 
-function DEM = ttinpaint(DEM,DEM2)
+function DEM = ttinpaint(DEM,DEM2,shapeparam,ls)
 
-INAN = isnan(DEM);
+INAN   = isnan(DEM);
 INAN.Z = imclearborder(INAN.Z);
-B    = dilate(INAN,ones(5)) & ~INAN;
-IX   = find(B);
-[x,y] = ind2coord(B,IX);
-z     = interp(DEM2,x,y);
 
-DIFF = DEM;
-DIFF.Z(IX) = z-DIFF.Z(IX);
+D      = bwdist(~INAN.Z,'euclidean');
+D      = exp(-(D/shapeparam).^2);
 
-DIFF = inpaintnans(DIFF,'laplace');
-DEM  = inpaintnans(DEM,DEM2);
-DEM.Z(INAN.Z) = DEM.Z(INAN.Z)+DIFF.Z(INAN.Z);
+dem    = DEM.Z;
+[X,Y]  = getcoordinates(DEM,'matrix');
 
+DEM2res = resample(DEM2,DEM);
+demres  = DEM2res.Z;
 
+CC = bwconncomp(INAN.Z,8);
+STATS = regionprops(CC,'SubarrayIdx','Image');
 
+for r = 1:numel(STATS)
+    % Extract subimage
+    rows = STATS(r).SubarrayIdx{1};
+    rows = [min(rows)-1 max(rows)+1];
+    cols = STATS(r).SubarrayIdx{2};
+    cols = [min(cols)-1 max(cols)+1];
 
+    z  = dem(rows(1):rows(2),cols(1):cols(2));
+    z2 = demres(rows(1):rows(2),cols(1):cols(2));
+    x  = X(rows(1):rows(2),cols(1):cols(2));
+    y  = Y(rows(1):rows(2),cols(1):cols(2));
+    d  = D(rows(1):rows(2),cols(1):cols(2));
+
+    % Get subimage of the nan-area
+    I       = padarray(STATS(r).Image,[1 1],false);
+    % Get subimage with valid boundary
+    B       = bwperim(imdilate(I,ones(3)));
+    % number of boundary pixels
+    n       = nnz(B);
+
+    % Fit a LS-surface to the boundary pixels
+    b  = [ones(n,1) x(B) y(B)]\(double(z(B)-z2(B)));
+
+    % Predict in nan area 
+    zlaplace = regionfill(z,I);
+    if ls
+        z(I)    = b(1) + b(2)*x(I) + b(3)*y(I) + z2(I);
+    else
+        z(I) = z2(I);
+    end
+    % Calculate weighted average of the both
+    z(I)    = d(I).*zlaplace(I) + (1-d(I)).*z(I);
+    
+    % Write back to DEM
+    dem(rows(1):rows(2),cols(1):cols(2)) = cast(z,class(dem));
+end
+DEM.Z = dem;
 end
 
 
