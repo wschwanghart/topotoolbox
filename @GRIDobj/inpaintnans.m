@@ -9,7 +9,7 @@ function DEM = inpaintnans(DEM,varargin)
 %     DEMf = inpaintnans(DEM,type,k,conn)
 %     DEMf = inpaintnans(DEM,DEM2)
 %     DEMf = inpaintnans(DEM,DEM2,method)
-%     DEMf = inpaintnans(DEM,DEM2,'tt','ls',true,'eps',20)
+%     DEMf = inpaintnans(DEM,DEM2,'tt','fit',1,'eps',20)
 %
 % Description
 % 
@@ -78,9 +78,12 @@ function DEM = inpaintnans(DEM,varargin)
 %     'eps'     parameter of the gaussian radial basis function (pixels). 
 %               Larger values will give higher weight to the Laplacian
 %               interpolation near the boundaries.
-%     'ls'      {true} or false. If true, the function will fit a linear 
-%               least squares model between the two DEMs which will balance
-%               potential vertical offsets.
+%     'fit'     0, 1, or 2. If 1, the function will resolve a potential 
+%               elevation bias between DEM and DEM2 by raising/lowering
+%               DEM2 to the elevations of the rim of nan-regions. If 2, the
+%               function will fit a linear least squares model between the
+%               two DEMs which will balance potential vertical offsets and
+%               mismatches in inclination.
 %
 %     Note that unlike the other interpolation methods, 'tt' will not fill
 %     nan-regions connected to the DEM boundaries.
@@ -89,7 +92,7 @@ function DEM = inpaintnans(DEM,varargin)
 %
 %     DEM      processed digital elevation model (GRIDobj)
 %
-% Example
+% Example 1
 %     
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
 %     DEM.Z(300:400,300:400) = nan;
@@ -103,7 +106,7 @@ function DEM = inpaintnans(DEM,varargin)
 % See also: ROIFILL, FILLSINKS, BWDIST, STREAMobj/inpaintnans
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 5. October, 2022
+% Date: 6. October, 2022
 
 if nargin == 1
     DEM.Z = deminpaint(DEM.Z,varargin{:});
@@ -134,10 +137,10 @@ elseif isa(varargin{1},'GRIDobj')
             p   = inputParser;
             addRequired(p,'DEM2',@(x) isa(x,'GRIDobj'))
             addRequired(p,'method',@(x) strcmpi(x,'tt'))
-            addParameter(p,'ls',true)
+            addParameter(p,'fit',1)
             addParameter(p,'eps',20);
             parse(p,varargin{:})
-            DEM = ttinpaint(DEM,varargin{1},p.Results.eps,p.Results.ls);
+            DEM = ttinpaint(DEM,varargin{1},p.Results.eps,p.Results.fit);
         otherwise
             INAN = isnan(DEM);
             IX   = find(INAN.Z);
@@ -229,7 +232,7 @@ end
 
 
 
-function DEM = ttinpaint(DEM,DEM2,shapeparam,ls)
+function DEM = ttinpaint(DEM,DEM2,shapeparam,fit)
 
 INAN   = isnan(DEM);
 INAN.Z = imclearborder(INAN.Z);
@@ -259,20 +262,30 @@ for r = 1:numel(STATS)
     y  = Y(rows(1):rows(2),cols(1):cols(2));
     d  = D(rows(1):rows(2),cols(1):cols(2));
 
+
     % Get subimage of the nan-area
     I       = padarray(STATS(r).Image,[1 1],false);
-    % Get subimage with valid boundary
-    B       = bwperim(imdilate(I,ones(3)));
-    % number of boundary pixels
-    n       = nnz(B);
 
-    % Fit a LS-surface to the boundary pixels
-    b  = [ones(n,1) x(B) y(B)]\(double(z(B)-z2(B)));
-
-    % Predict in nan area 
+    % Predict in nan area using laplacian interpolation
     zlaplace = regionfill(z,I);
-    if ls
-        z(I)    = b(1) + b(2)*x(I) + b(3)*y(I) + z2(I);
+
+    % fit DEM2 to remove potential offsets
+    if fit > 0
+        % Get subimage with valid boundary
+        B       = bwperim(imdilate(I,ones(3)));
+        % number of boundary pixels
+        n       = nnz(B);
+
+        if fit == 1
+            % Adjust the mean value
+            b = ones(n,1)\(double(z(B)-z2(B)));
+            z(I) = b + z2(I);
+        elseif fit == 2
+            % Fit a LS-surface to the boundary pixels
+            b     = [ones(n,1) x(B) y(B)]\(double(z(B)-z2(B)));
+            z(I)  = b(1) + b(2)*x(I) + b(3)*y(I) + z2(I);
+        end
+
     else
         z(I) = z2(I);
     end
