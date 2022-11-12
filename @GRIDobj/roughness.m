@@ -23,8 +23,6 @@ function OUT = roughness(DEM,type,ks)
 %                 elevation of its surrounding pixels)
 %           'roughness' roughness is the the largest inter-cell difference 
 %                 of a central pixel and its surrounding cells (=default)
-%           'ruggedness' value range within an area (Melton 1965 in Olaya
-%                 2009, p. 158).
 %           'srf' surface roughness factor (Hobson 1972 in Olaya 2009, 
 %                 p. 159). Includes the components of the unit vector
 %                 normal to the land surface (see surfnorm).
@@ -52,14 +50,14 @@ function OUT = roughness(DEM,type,ks)
 %
 %
 %
-% See also: stdfilt
+% See also: stdfilt, FLOWobj/meltonruggedness
 % 
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 28. January, 2013
+% Date: 12. November, 2022
 
 narginchk(1,3)
 
-validindices = {'tpi','tri','roughness','ruggedness','srf'};
+validindices = {'tpi','tri','roughness','srf'};
 defaultkernelsize = [3 3];
 
 if nargin == 1;
@@ -154,11 +152,11 @@ switch lower(type)
         warning('TopoToolbox:incorrectinput',...
             'the kernel size does not apply to the roughness index.')
         end
-    case 'ruggedness'
-        % Ruggedness
-        % Value range divided by the squared area
-        kernel = ones(ks);
-        R = (imdilate(dem,kernel) - imerode(dem,kernel))/sqrt((DEM.cellsize^2)*numel(kernel));
+    %case 'ruggedness'
+    %    % Ruggedness
+    %    % Value range divided by the squared area
+    %    kernel = ones(ks);
+    %    R = (imdilate(dem,kernel) - imerode(dem,kernel))/sqrt((DEM.cellsize^2)*numel(kernel));
     case 'srf'
         % surface roughness factor according to Hobson (1972) (in Olaya
         % 2009)

@@ -117,6 +117,7 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 
 - new function: GRIDobj/randomsample - Create a spatially uniform sample based on a GRIDobj
 - new function: tthelp - Search for keywords on the TopoToolbox blog
+- new function: meltonruggedness (thanks for pointing out the bug, Kerry Leith!)
 
 ### 2.4
 
