@@ -33,6 +33,8 @@ classdef subplotlabel < handle
 %     'FontAngle'   {'normal'} or 'italic'
 %     'Color'       Font color. {'k'}
 %     'BackgroundColor'   {'none'} or any other way to define colors
+%     'Prefix'      ''
+%     'Postfix'     ''
 %
 %     Applicable if called with fig handle only
 %
@@ -76,11 +78,12 @@ classdef subplotlabel < handle
 % NUM2ROMAN (https://github.com/beaudu/romanum)
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 22. February, 2021
+% Date: 15. November, 2022
 
     properties
         label
         LIMIX
+        offset
     end
     
     methods
@@ -98,7 +101,10 @@ classdef subplotlabel < handle
             addParameter(p,'BackgroundColor','none');
             addParameter(p,'FontWeight','normal');
             addParameter(p,'FontAngle','normal');
+            addParameter(p,'postfix','');
+            addParameter(p,'prefix','')
             addParameter(p,'Color','k');
+            addParameter(p,'offset',0.01)
             % addParameter(p,'Clipping','on');
             parse(p,varargin{:})
             
@@ -162,46 +168,55 @@ classdef subplotlabel < handle
             else
                 ax = p.Results.ax;
                 letter = p.Results.value;
-                
+                offset = p.Results.offset;
                 xl = [0 1]; %xlim(ax);
                 yl = [0 1]; %ylim(ax);
-                switch lower(p.Results.location)
+                loc = validatestring(p.Results.location,...
+                    {'northwest','southeast','northeast','southwest',...
+                     'nw','se','ne','sw',...
+                     'northwestoutside','nwo'});
+                switch lower(loc)
                     case {'northeast','ne'}
                         IXX = 2;
                         IXY = 2;
+
+                        offset = [-offset -offset];
+
                         valign = 'top';
                         halign = 'right';
                     case {'northwest','nw'}
                         IXX = 1;
                         IXY = 2;
+                        offset = [offset -offset];
+
                         valign = 'top';
                         halign = 'left';
                     case {'southwest','sw'}
                         IXX = 1;
                         IXY = 1;
+                        offset = [offset offset];
                         valign = 'bottom';
                         halign = 'left';
                     case {'southeast','se'}
                         IXX = 2;
                         IXY = 1;
+                        offset = [-offset offset];
+
                         valign = 'bottom';
                         halign = 'right';
-                    case {'northwestoutside'}
+                    case {'northwestoutside','nwo'}
+                        
                         IXX = 1;
                         IXY = 2;
+                        offset = [offset offset];
+
                         valign = 'bottom';
                         halign = 'left';
                 end
                 
-                locx = xl(IXX);
-                locy = yl(IXY);
-                
-                switch halign
-                    case 'right'
-                        letter = [' ' letter ' '];
-                    case 'left'
-                        letter = [' ' letter ' '];
-                end
+                locx = xl(IXX) + offset(IXX);
+                locy = yl(IXY) + offset(IXY);
+               
                 
                 if ishold(ax)
                     ihold = true;
@@ -210,7 +225,8 @@ classdef subplotlabel < handle
                 end
                 
                 hold(ax,'on');
-                h.label = text(ax,locx,locy,letter,...
+                h.label = text(ax,locx,locy,...
+                    [p.Results.prefix letter p.Results.postfix],...
                     'VerticalAlignment',valign,...
                     'HorizontalAlignment',halign,...
                     'Color',p.Results.Color,...
@@ -222,7 +238,7 @@ classdef subplotlabel < handle
                     'FontWeight',p.Results.FontWeight,...
                     'Units','normalized',...
                     'Clipping','on');
-                
+                h.offset = offset;
                 
                 if ~ihold
                     hold(ax,'off');
@@ -237,7 +253,9 @@ classdef subplotlabel < handle
             for r = 1:numel(h)
                 xl = [0 1]; 
                 yl = [0 1];
-                h(r).label.Position = [xl(h(r).LIMIX(1)) yl(h(r).LIMIX(2))];
+                h(r).label.Position = ...
+                    [xl(h(r).LIMIX(1))+h(r).offset(1) ...
+                     yl(h(r).LIMIX(2))+h(r).offset(2)];
             end
         end
         function upper(h)
