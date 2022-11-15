@@ -33,8 +33,14 @@ classdef subplotlabel < handle
 %     'FontAngle'   {'normal'} or 'italic'
 %     'Color'       Font color. {'k'}
 %     'BackgroundColor'   {'none'} or any other way to define colors
-%     'Prefix'      ''
-%     'Postfix'     ''
+%     'Prefix'      ''. Character before the enumeral.
+%     'Postfix'     ''. Character behind the enumeral.
+%     'offset'      offset in x and y direction from the corner in
+%                   normalized axis units. By default, the offset is 0.01. 
+%                   offset can be a scalar or a two-element vector with an 
+%                   x and y offset. The direction of the offset depends on
+%                   the location with positiv values towards the interior
+%                   of the axes.
 %
 %     Applicable if called with fig handle only
 %
@@ -104,7 +110,7 @@ classdef subplotlabel < handle
             addParameter(p,'postfix','');
             addParameter(p,'prefix','')
             addParameter(p,'Color','k');
-            addParameter(p,'offset',0.01)
+            addParameter(p,'offset',0.01,@(x) numel(x) <= 2)
             % addParameter(p,'Clipping','on');
             parse(p,varargin{:})
             
@@ -169,6 +175,13 @@ classdef subplotlabel < handle
                 ax = p.Results.ax;
                 letter = p.Results.value;
                 offset = p.Results.offset;
+                
+                if numel(offset) == 1
+                    offset = [offset offset];
+                else
+                    offset = offset(:)';
+                end
+
                 xl = [0 1]; %xlim(ax);
                 yl = [0 1]; %ylim(ax);
                 loc = validatestring(p.Results.location,...
@@ -180,27 +193,27 @@ classdef subplotlabel < handle
                         IXX = 2;
                         IXY = 2;
 
-                        offset = [-offset -offset];
+                        offset = offset .* [-1 -1];
 
                         valign = 'top';
                         halign = 'right';
                     case {'northwest','nw'}
                         IXX = 1;
                         IXY = 2;
-                        offset = [offset -offset];
+                        offset = offset .* [1 -1];
 
                         valign = 'top';
                         halign = 'left';
                     case {'southwest','sw'}
                         IXX = 1;
                         IXY = 1;
-                        offset = [offset offset];
+                        offset = offset .* [1 1];
                         valign = 'bottom';
                         halign = 'left';
                     case {'southeast','se'}
                         IXX = 2;
                         IXY = 1;
-                        offset = [-offset offset];
+                        offset = offset .* [-1 1];
 
                         valign = 'bottom';
                         halign = 'right';
@@ -208,7 +221,7 @@ classdef subplotlabel < handle
                         
                         IXX = 1;
                         IXY = 2;
-                        offset = [offset offset];
+                        offset = offset .* [1 1];
 
                         valign = 'bottom';
                         halign = 'left';
