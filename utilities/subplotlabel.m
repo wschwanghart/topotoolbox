@@ -213,7 +213,7 @@ classdef subplotlabel < handle
                     case {'southeast','se'}
                         IXX = 2;
                         IXY = 1;
-                        offset = offset .* [-1 1];
+                        offset = offset .* [1 -1];
 
                         valign = 'bottom';
                         halign = 'right';
