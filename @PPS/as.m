@@ -10,6 +10,7 @@ function varargout = as(P,outtype)
 %     [MSS,MSP] = as(P,'mapshape')
 %     [xs,ys,xp,yp] = as(P,'nanpunctuated')
 %     [G,p,xdata,ydata] = as(P,'graph') or as(P,'digraph')
+%     nal = as(P,'nal') or as(P,'logical')
 %
 % Description
 % 
@@ -39,6 +40,9 @@ function varargout = as(P,outtype)
 %     and digraph from the stream network. p is the node id of the points
 %     on the network. xdata and ydata are vectors with the coordinates of
 %     the node vertices.
+%
+%     as(P,'nal') or as(P,'logical') return a node-attribute list of 
+%     logical values, where true elements refer to pixels with points.
 %
 % Input arguments
 %
@@ -109,5 +113,13 @@ switch lower(outtype)
         varargout{2} = P.PP;
         varargout{3} = xdata;
         varargout{4} = ydata;
+		
+	case 'nal'
+		varargout{1} = accumarray(P.PP,1,[numel(P.S.x) 1],@sum,0);
+	
+	case 'logical'
+		nal = logical(getnal(P.S));
+		nal(P.PP) = true;
+		varargout{1} = nal;
     
 end
