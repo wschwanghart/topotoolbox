@@ -41,8 +41,12 @@ function varargout = as(P,outtype)
 %     on the network. xdata and ydata are vectors with the coordinates of
 %     the node vertices.
 %
-%     as(P,'nal') or as(P,'logical') return a node-attribute list of 
-%     logical values, where true elements refer to pixels with points.
+%     as(P,'nal') returns a node-attribute list of double values, where 
+%     values refer to the number of points. If there are no duplicate
+%     points, there are only values of 0s and 1s.
+%
+%     as(P,'logical') returns a node-attribute list of logical values,
+%     where true elements refer to pixels containing one (or more) points.
 %
 % Input arguments
 %
