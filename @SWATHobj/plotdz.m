@@ -111,7 +111,7 @@ elseif ~right
     SW.Z = SW.Z(1:ny,:);
 end
 
-z_min  = min(SW.Z,[],1); %nanmin(SW.Z,[],1);
+z_min  = min(SW.Z,[],1);
 z_max  = max(SW.Z,[],1);
 z_mean = mean(SW.Z,1,'omitnan')';
 z_std  = std(SW.Z,0,1,'omitnan')';
