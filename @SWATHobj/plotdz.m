@@ -32,11 +32,22 @@ function h = plotdz(SW,varargin)
 %     alligning a SWATHobj that was obtained along, e.g., a reach of
 %     a drainage network, with the STREAMobj that it was derived from
 %
+%     'plotminmax'    {true}, false
+%     determines whether min/max ranges are plotted
+%  
 %     'boundedline'   true, {false}
-%     allows the plot to be created with the 'boundedline' plotting
-%     function by Kelley Kearny, if available (downloadable from Matlab 
-%     Central website)
+%     both standard deviation from the mean and min/max are plotted using 
+%     patch.
 %
+%     if boundedline is true, then following parameters apply
+%     'facecolor'          color (three element vector) for the face color
+%                          of the std range. Default is 
+%                          [0.5059 0.8471 0.8157]
+%     'minmaxfacecolor'    color of the min/max range. Default is [.8 .8 .8]
+%     'edgecolor           edge color for the std range {'none'}
+%     'minmaxedgecolor'    edge color for the min/max range {'none'}
+%     'facealpha'          alpha of the std range {1}
+%     'minmaxfacealpha'    alpha of the min/max range {1}
 %
 % Output arguments (optional)
 %
@@ -54,17 +65,30 @@ function h = plotdz(SW,varargin)
 %
 %
 % Author: Dirk Scherler (scherler[at]gfz-potsdam.de)
-% Date: June, 2013
+%         Wolfgang Schwanghart 
+% Date: 11. December, 2022
 
+% default patch color
+clr = [0.5059 0.8471 0.8157];
 
 % Parse inputs
 p = inputParser;
 p.FunctionName = 'plotdz';
 addRequired(p,'SW',@(x) isa(x,'SWATHobj'));
-addParamValue(p,'left',true,@(x) islogical(x))
-addParamValue(p,'right',true,@(x) islogical(x))
-addParamValue(p,'distadjust',0,@(x) isnumeric(x))
-addParamValue(p,'boundedline',false,@(x) islogical(x))
+addParameter(p,'left',true,@(x) islogical(x))
+addParameter(p,'right',true,@(x) islogical(x))
+addParameter(p,'distadjust',0,@(x) isnumeric(x))
+addParameter(p,'boundedline',false,@(x) islogical(x))
+addParameter(p,'facecolor',clr)
+addParameter(p,'facealpha',1)
+addParameter(p,'minmaxfacecolor',[.8 .8 .8])
+addParameter(p,'edgecolor','none')
+addParameter(p,'meancolor','k')
+addParameter(p,'plotminmax',true)
+addParameter(p,'minmaxcolor',[.7 .7 .7])
+addParameter(p,'minmaxedgecolor','none')
+addParameter(p,'minmaxfacealpha',1)
+
 parse(p,SW,varargin{:});
 
 % parameters
@@ -87,30 +111,64 @@ elseif ~right
     SW.Z = SW.Z(1:ny,:);
 end
 
-z_min = nanmin(SW.Z,[],1);
-z_max = nanmax(SW.Z,[],1);
-z_mean = nanmean(SW.Z,1)';
-z_std = nanstd(SW.Z,0,1)';
-dist = SW.distx+distadjust;
+z_min  = min(SW.Z,[],1); %nanmin(SW.Z,[],1);
+z_max  = max(SW.Z,[],1);
+z_mean = mean(SW.Z,1,'omitnan')';
+z_std  = std(SW.Z,0,1,'omitnan')';
+dist   = SW.distx+distadjust;
 
-if exist('boundedline','file') && (boundedl)
-    % Use plotting function 'boundedline', by Kelley Kearny, if
-    % found in search path. Available from Matlab Central.
-    [hp(1), hp(2)] = boundedline(dist,z_mean,z_std,'alpha'); hold on
-    hp(3) = plot(dist,z_min,'c-');
-    plot(dist,z_max,'c-')
+% draw SWATHobj
+ax = gca;
+if ishold(ax)
+    ISHOLD = true;
 else
-    hp(1) = plot(dist,z_mean,'r-'); hold on
-    hp(2) = plot([dist;nan;dist],[z_mean-z_std;nan;z_mean+z_std],'b-');
-    hp(3) = plot([dist;nan;dist],[z_min nan z_max],'c-');
+    ISHOLD = false;
+    cla(ax, 'reset')
+    hold(ax,'on')
+    box(ax,'on')
+end
+
+
+if (boundedl) %exist('boundedline','file') && 
+    if p.Results.plotminmax
+    hp(3) = patch([dist(:); flipud(dist(:))],...
+                  [z_min(:); flipud(z_max(:))],...
+                  p.Results.minmaxfacecolor,...
+                  'EdgeColor',p.Results.minmaxedgecolor,...
+                  'FaceAlpha',p.Results.minmaxfacealpha);
+    end
+    hp(2) = patch([dist(:); flipud(dist(:))],...
+                  [z_mean(:)-z_std(:); flipud(z_mean(:)+z_std(:))],...
+                  p.Results.facecolor,...
+                  'EdgeColor',p.Results.edgecolor,...
+                  'FaceAlpha',p.Results.facealpha);
+    
+
+    hp(1) = plot(dist,z_mean,'color',p.Results.meancolor);
+
+else
+    hp(1) = plot(dist,z_mean,'-','Color',p.Results.meancolor); 
+    hp(2) = plot([dist;nan;dist],[z_mean-z_std;nan;z_mean+z_std],'-','color',clr);
+    if p.Results.plotminmax
+        hp(3) = plot([dist;nan;dist],[z_min nan z_max],':',...
+            'color',clr);
+    end
 end
 
 drawnow
 xlabel(sprintf('Distance along profile (%s)',SW.xyunit))
 ylabel(sprintf('Z (%s)',SW.zunit))
-legend(hp,{'Mean','+/- St.Dev.','Min/Max'})
+if p.Results.plotminmax
+    legend(hp,{'Mean','+/- St.Dev.','Min/Max'})
+else
+    legend(hp,{'Mean','+/- St.Dev.'})
+end
 
-if nargout == 1;
+if ~ISHOLD
+    hold(ax,'off')
+end
+
+if nargout == 1
     h = hp;
 end
 
