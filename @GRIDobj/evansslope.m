@@ -25,6 +25,10 @@ function varargout = evansslope(DEM,varargin)
 %
 %     'padval'    'none' (values along edges will have nans), other options
 %                  see padarray. Default is 'replicate'.
+%     'modified'  {false} or true. If true, the surface is weakly smoothed
+%                 before gradients are calculated (see Shary et al., 2002)
+%     'removenans' [true} or false. Inter- and extrapolate to remove nans 
+%                 before calculation. 
 %     
 % Output arguments
 %
@@ -37,6 +41,9 @@ function varargout = evansslope(DEM,varargin)
 %     G = evansslope(DEM);
 %     imageschs(DEM,G,'caxis',[0 1])
 %
+% Reference: Shary, P. A., Sharaya, L. S., and Mitusov, A. V.: Fundamental 
+% quantitative methods of land surface analysis, Geoderma, 107, 1–32, 
+% https://doi.org/10.1016/S0016-7061(01)00136-7, 2002.
 %
 % See also: GRIDobj/gradient8, GRIDobj/arcslope, GRIDobj/curvature
 %        
@@ -47,7 +54,29 @@ function varargout = evansslope(DEM,varargin)
 p = inputParser;
 p.FunctionName = 'GRIDobj/evansslope';
 addParameter(p,'padval','replicate')
+addParameter(p,'modified',false)
+addParameter(p,'removenans',true)
 parse(p,varargin{:})
+
+if p.Results.removenans
+    I = isnan(DEM);
+
+    if any(I)
+        % inpaint
+        DEM = inpaintnans(DEM);
+        if any(isnan(DEM))
+            % extrapolate using nearest neighbor
+            [~,L]   = bwdist(~isnan(DEM.Z)); 
+            DEM.Z   = DEM.Z(L);
+        end
+    end
+end
+      
+
+if p.Results.modified
+    kernel = [0 1 0; 1 41 1; 0 1 0]/45;
+    DEM.Z = conv2(padarray(DEM.Z,[1 1],'replicate'),kernel,'valid');
+end
 
 if ischar(p.Results.padval) || isstring(p.Results.padval)
     padval = validatestring(p.Results.padval,{'none','replicate','symmetric','circular'});
@@ -81,6 +110,9 @@ if nargout == 1
             varargout{1}.Z = sqrt(fx.^2 + fy.^2);
     end
     varargout{1}.name = 'Gradient (Evans)';
+    if exist('I','var')
+        varargout{1} = clip(varargout{1},~I);
+    end
 else
     switch lower(p.Results.padval)
         case 'none'
@@ -96,6 +128,11 @@ else
     end
     varargout{1}.name = 'fx (Evans)';
     varargout{2}.name = 'fy (Evans)';
+    if exist('I','var')
+        I = ~I;
+        varargout{1} = clip(varargout{1},I);
+        varargout{2} = clip(varargout{2},I);
+    end
 
 end
 
