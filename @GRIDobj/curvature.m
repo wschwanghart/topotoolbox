@@ -115,7 +115,7 @@ end
 
 function curv = curvaturesub(dem,cs,ctype)
 
-if isstruct(dem);
+if isstruct(dem)
     dem = dem.data;
     % DEM has already been padded
     correctedges = false;

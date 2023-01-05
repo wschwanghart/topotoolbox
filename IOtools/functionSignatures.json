@@ -1,0 +1,16 @@
+{
+  "_schemaVersion": "1.0.0",
+  "readopentopo":
+  {
+     "inputs":
+     [
+        {"name":"extent", "kind":"namevalue", "type":["GRIDobj","numeric"]},
+		{"name":"demtype", "kind":"namevalue", "type":"choices={'SRTMGL3','SRTMGL1','SRTMGL1_E','AW3D30','AW3D30_E','SRTM15Plus','NASADEM','COP30','COP90','EU_DTM'}"},
+		{"name":"apikey", "kind":"namevalue", "type":["char","string"]},
+		{"name":"verbose", "kind":"namevalue", "type":["numeric","logical","scalar"]},
+		{"name":"checkrequestlimit", "kind":"namevalue", "type":["numeric","logical","scalar"]},
+		{"name":"addmargin", "kind":"namevalue", "type":["numeric","scalar"]},
+		{"name":"deletefile", "kind":"namevalue", "type":["numeric","logical","scalar"]}
+     ]
+  }
+}

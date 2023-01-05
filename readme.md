@@ -119,6 +119,7 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 - new function: tthelp - Search for keywords on the TopoToolbox blog
 - new function: meltonruggedness (thanks for pointing out the bug, Kerry Leith!)
 - new function: PPS/cdftest
+- new function: GRIDobj/evansslope - calculate surface gradient using Evans method
 
 ### 2.4
 
