@@ -10,6 +10,8 @@
 		{"name":"verbose", "kind":"namevalue", "type":["numeric","logical","scalar"]},
 		{"name":"checkrequestlimit", "kind":"namevalue", "type":["numeric","logical","scalar"]},
 		{"name":"addmargin", "kind":"namevalue", "type":["numeric","scalar"]},
+		{"name":"filename", "kind":"namevalue", "type":["char","string"]},
+		{"name":"interactive", "kind":"namevalue", "type":["numeric","logical","scalar"]},
 		{"name":"deletefile", "kind":"namevalue", "type":["numeric","logical","scalar"]}
      ]
   }

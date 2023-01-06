@@ -22,6 +22,9 @@ function DEM = readopentopo(varargin)
 % Input arguments
 %
 %     Parameter name values
+%     'interactive'    {false} or true. If true, readopentopo will open a
+%                      GUI that enables interactive selection. If true,
+%                      then any given extent options will be ignored.
 %     'filename'       provide filename. By default, the function will save
 %                      the DEM to a temporary file in the system's temporary 
 %                      folder. The option 'deletefile' controls whether the
@@ -36,7 +39,9 @@ function DEM = readopentopo(varargin)
 %     'addmargin'      Expand the extent derived from 'extent',GRIDobj by a
 %                      scalar value in °. Default is 0.01. The option is
 %                      only applicable if extent is provided by a GRIDobj.
-%     'north'          northern boundary in geographic coordinates (WGS84)
+%     'north'          northern boundary in geographic coordinates (WGS84).
+%                      The option is ignored if the option 'extent' is
+%                      provided or if 'interactive', true.
 %     'south'          southern boundary
 %     'west'           western boundary
 %     'east'           eastern boundary
@@ -60,10 +65,15 @@ function DEM = readopentopo(varargin)
 %                      myOpenTopo in the OpenTopography portal. You can
 %                      also create a text file in the folder IOtools named
 %                      opentopography.apikey which must contain the API
-%                      Key. If there is a file, there is no need to provide
-%                      this parameter name/value pair.
+%                      Key. If there is a file that contains the key, there 
+%                      is no need to provide it here.
 %     'verbose'        {true} or false. If true, then some information on
-%                      the process is shown in the command window
+%                      the process is shown in the command window.
+%     'checkrequestlimit' {true} or false. Opentopography implements
+%                      request limits. If the chose extent exceeds the 
+%                      request limit, readopentopo will issue an error. If
+%                      this option is set to false, readopentopo will try
+%                      to download.
 %     'deletefile'     {true} or false. True, if file should be deleted
 %                      after it was downloaded and added to the workspace.
 % 
@@ -103,6 +113,7 @@ addParameter(p,'demtype','SRTMGL3');
 addParameter(p,'deletefile',true);
 addParameter(p,'verbose',true);
 addParameter(p,'apikey',[]);
+addParameter(p,'checkrequestlimit',true)
 parse(p,varargin{:});
 
 validdems = {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
@@ -201,10 +212,20 @@ if any([isempty(west) isempty(east) isempty(south) isempty(north)]) || p.Results
         north = ext(3);
     end
 end
-    
+
+% Check request limit
+a = areaint([south south north north],...
+            [west east east west],...
+            almanac('earth','radius','kilometers'));
+
+if p.Results.checkrequestlimit && (a > requestlimit)
+    error('TopoToolbox:readopentopo',...
+            ['Request limit (' num2str(requestlimit) ' km^2) exceeded.\n'...
+             'Your extent is ' num2str(a,1) ' km^2. Choose a smaller area.' ])
+end
+
 if p.Results.verbose
-    a = areaint([south south north north],...
-                [west east east west],almanac('earth','radius','kilometers'));
+
     disp('-------------------------------------')
     disp('readopentopo process:')
     disp(['DEM type: ' demtype])
