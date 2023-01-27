@@ -1,6 +1,6 @@
 function DEM = inpaintnans(DEM,varargin)
 
-%INPAINTNANS Interpolate missing values in a grid (GRIDobj)
+%INPAINTNANS Interpolate or fill missing values in a grid (GRIDobj)
 %
 % Syntax
 %
@@ -19,12 +19,15 @@ function DEM = inpaintnans(DEM,varargin)
 %     pixels not connected to the DEM grid boundaries.
 %
 %     inpaintnans(DEM,type) or inpaintnans(DEM,type,k) fills missing values
-%     in the DEM based on the values surrounding regions with missing values.
+%     in the DEM by interpolating inward from the pixels surrounding the
+%     void. There are different ways to interpolate with 'laplace'
+%     interpolation being the default (see also regionfill). 
 %
 %     inpaintnans(DEM,DEM2) or inpaintnans(DEM,DEM2,method) fills missing
 %     values using interpolation from another grid. An example is that 
 %     missing values in a SRTM DEM could be filled with values derived from
-%     an ASTER GDEM.
+%     an ASTER GDEM. This technique is also referred to as the Fill and
+%     Feather method (Grohman et al., 2006).
 %
 %     inpaintnans(DEM,DEM2,'tt') uses a hybrid method that uses both
 %     laplacian interpolation and filling using a second DEM. The methods
@@ -34,7 +37,8 @@ function DEM = inpaintnans(DEM,varargin)
 %     average of both techniques whereas higher weights are assigned to 
 %     the laplacian technique if pixels are close to the boundaries of the
 %     voids. Note that this technique will not fill voids connected to the
-%     DEM boundaries.
+%     DEM boundaries. The technique is similar to the Delta Surface Fill
+%     Method (DSF) described by Grohman et al. (2006).
 %
 %     inpaintnans(DEM,'interactive') starts an interactive tool to map a
 %     region to be filled by laplacian interpolation.
@@ -45,7 +49,7 @@ function DEM = inpaintnans(DEM,varargin)
 %               indicated by nans (GRIDobj)
 %     type      fill algorithm 
 %               'laplace' (default): laplace interpolation 
-%                     as implemented in roifill
+%                     as implemented in regionfill
 %               'fill': elevate all values in each connected
 %                     region of missing values to the minimum
 %                     value of the surrounding pixels (same as 
@@ -85,8 +89,9 @@ function DEM = inpaintnans(DEM,varargin)
 %               two DEMs which will balance potential vertical offsets and
 %               mismatches in inclination.
 %
-%     Note that unlike the other interpolation methods, 'tt' will not fill
-%     nan-regions connected to the DEM boundaries.
+%     Note that unlike the other interpolation methods (as defined by the 
+%     option 'method', 'tt' will not fill nan-regions connected to the DEM 
+%     boundaries.
 %
 % Output
 %
@@ -105,8 +110,12 @@ function DEM = inpaintnans(DEM,varargin)
 % 
 % See also: ROIFILL, FILLSINKS, BWDIST, STREAMobj/inpaintnans
 %
+% References: Grohman, Greg, George Kroenung, and John Strebeck. "Filling 
+%             SRTM voids: The delta surface fill method." Photogrammetric 
+%             Engineering and Remote Sensing 72.3 (2006): 213-216.
+%
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 6. October, 2022
+% Date: 27. January, 2023
 
 if nargin == 1
     DEM.Z = deminpaint(DEM.Z,varargin{:});
