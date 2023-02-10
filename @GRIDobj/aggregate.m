@@ -40,7 +40,7 @@ function C = aggregate(DEMlowres,DEMhighres,aggfun)
 %               values derived from A
 %
 %
-% See also: GRIDobj/resample, accumarray
+% See also: GRIDobj/resample, GRIDobj/reclabel, accumarray
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
 % Date: 12. July, 2018
