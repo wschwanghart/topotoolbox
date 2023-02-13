@@ -14,11 +14,12 @@ function varargout = cdftest(P,varargin)
 %     statistics (KS-Test).
 %
 %     The test returns t = 0, if the null hypothesis cannot be rejected
-%     that the point pattern in P is completely random.
+%     that the point pattern in P is completely random at an error
+%     probability (alpha) less or equal than 0.05.
 %
 % Input arguments
 %
-%     P      PPS
+%     P      Instance of a PPS object. 
 %     
 %     Parameter name/value pairs
 % 
