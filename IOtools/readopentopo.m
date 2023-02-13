@@ -22,7 +22,7 @@ function DEM = readopentopo(varargin)
 % Input arguments
 %
 %     Parameter name values
-%     'interactive'    {false} or true. If true, readopentopo will open a
+%     'interactive'    {true} or false. If true, readopentopo will open a
 %                      GUI that enables interactive selection. If true,
 %                      then any given extent options will be ignored.
 %     'filename'       provide filename. By default, the function will save
@@ -97,12 +97,12 @@ function DEM = readopentopo(varargin)
 % Reference: http://www.opentopography.org/developers
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 26. September, 2022
+% Date: 13. February, 2023
 
 
 p = inputParser;
 addParameter(p,'filename',[tempname '.tif']);
-addParameter(p,'interactive',false);
+addParameter(p,'interactive',true);
 addParameter(p,'extent',[]);
 addParameter(p,'addmargin',0.01);
 addParameter(p,'north',37.091337);
