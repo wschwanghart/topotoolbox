@@ -26,7 +26,7 @@ function [RGB,x,y] = GRIDobj2rgb(DEM,varargin)
 %     RGB    n x m x 3 array with uint8 RGB values between 0 and 255 
 %     x,y    coordinate vectors
 %
-% Example
+% Example 1
 %
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
 %     FD  = FLOWobj(DEM);
@@ -39,23 +39,39 @@ function [RGB,x,y] = GRIDobj2rgb(DEM,varargin)
 %     image(x,y,RGB)
 %     axis xy
 %
+% Example 2: Fuse image with hillshade
+%
+%     RGB2 = imageschs(DEM,[],'colormap',[1 1 1]);
+%     RGB3 = uint8(single(RGB) .* single(RGB2)/255);
+%     image(x,y,RGB3)
+%
+% Example 3: Add cast shadows
+%
+%     C = castshadow(DEM,'azi',135,'alt',15);
+%     RGB4 = GRIDobj2rgb(C,'colormap',ttscm("grayC",255,[0 70]));
+%     RGB5 = uint8(single(RGB3) .* (single(RGB4)/255));
+%     image(x,y,RGB5)
 %
 % See also: imageschs, GRIDobj2im
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 20. February, 2023
+% Date: 21. February, 2023
 
+% Parse input
 p = inputParser;
-
-addParameter(p,'colormap',parula)
-addParameter(p,'nancolor',[1 1 1])
-addParameter(p,'clim',[])
-
+p.FunctionName   = 'GRIDobj2rgb';
+addParameter(p,'colormap',parula,@(x) ...
+    validateattributes(x,'numeric',{'2d','ncols',3,'>=',0,'<=',1}))
+addParameter(p,'nancolor',[1 1 1],@(x) ...
+    validateattributes(x,'numeric',{'numel',3}))
+addParameter(p,'clim',[],@(x) ...
+    validateattributes(x,'numeric',{'increasing','numel',2}))
 parse(p,varargin{:})
 
 % Any nans?
 I = isnan(DEM);
 
+% Colormap
 clr = p.Results.colormap;
 Z   = DEM.Z;
 
