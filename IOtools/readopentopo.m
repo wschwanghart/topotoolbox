@@ -58,6 +58,8 @@ function DEM = readopentopo(varargin)
 %                      'COP90':      Copernicus Global DSM 90m 
 %                      'EU_DTM:      Continental Europe Digital Terrain 
 %                                    Model 
+%                      'GEDI_L3':    Global Ecosystem Dynamics 
+%                                    Investigation 1x1 km DTM
 %                        
 %                      * requires API Key (see option 'apikey').
 %
@@ -119,7 +121,7 @@ parse(p,varargin{:});
 validdems = {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
      'AW3D30','AW3D30_E','SRTM15Plus',...
      'NASADEM','COP30','COP90',...
-     'EU_DTM'};
+     'EU_DTM','GEDI_L3'};
 
 demtype = validatestring(p.Results.demtype,...
     validdems,'readopentopo');
@@ -131,7 +133,7 @@ demtype = validatestring(p.Results.demtype,...
 requestlimits = [4.05e6, 0.45e6, 0.45e6, ...
                  0.45e6, 0.45e6, 125e6,...
                  0.45e6, 0.45e6, 4.05e6, ...
-                 0.45e6 ]; % km^2
+                 0.45e6 50e7]; % km^2
 requestlimit  = requestlimits(strcmp(demtype,validdems));
 
 % API URL

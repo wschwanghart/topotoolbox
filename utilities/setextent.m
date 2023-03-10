@@ -57,8 +57,13 @@ elseif isa(extent,'GRIDobj')
     [x,y] = getoutline(extent);
     set(ax,'xlim',[min(x) max(x)],'ylim',[min(y) max(y)]);
 elseif isstruct(extent)
-    x = [extent.X];
-    y = [extent.Y];
+    try
+        x = [extent.X];
+        y = [extent.Y];
+    catch
+        x = vertcat(extent.X);
+        y = vertcat(extent.Y);
+    end
     set(ax,'xlim',[min(x) max(x)],'ylim',[min(y) max(y)]);
 elseif isa(extent,'STREAMobj')
     v = info(extent,'boundingbox');

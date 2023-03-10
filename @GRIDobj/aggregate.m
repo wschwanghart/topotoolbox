@@ -43,7 +43,7 @@ function C = aggregate(DEMlowres,DEMhighres,aggfun)
 % See also: GRIDobj/resample, GRIDobj/reclabel, accumarray
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 12. July, 2018
+% Date: 10. March, 2023
 
 if nargin == 2
     aggfun = @mean;
@@ -86,10 +86,10 @@ if isempty(Z)
     C = GRIDobj(DEMlowres);
     return
 end
-    
+
 z = accumarray(IX,Z,[prod(DEMlowres.size) 1],aggfun);
 C = DEMlowres;
 C.Z = reshape(z,DEMlowres.size);
-% C.Z(C.Z == 0) = nan;
+C.Z(C.Z == 0) = nan;
 
 
