@@ -39,7 +39,7 @@ function ZI = interpwithbarriers(DEM,x,y,z,varargin)
 %     [xx,yy] = getcoordinates(DEM);
 %     BARRIER = GRIDobj(DEM);
 %     
-%     BARRIER.Z(200:400,600) = true;
+%     BARRIER.Z(150:450,600) = true;
 %     BARRIER.Z(300,300:900) = true;
 %     
 %     z = rand(size(x));
@@ -53,6 +53,9 @@ function ZI = interpwithbarriers(DEM,x,y,z,varargin)
 %     surf(Z)
 %     exaggerate(gca,700)
 %     camlight
+%     hold on
+%     stem3(x,y,z,'k')
+%     hold off
 %
 % See also: GRIDobj/resample, GRIDobj/reclabel, accumarray
 %
