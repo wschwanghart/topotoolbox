@@ -65,7 +65,7 @@ if nargin >= 2
     end
 end
 
-if (1) %~(exist(['flowacc_mex.' mexext],'file') == 3 && nargin<3 && strcmp(FD.type,'single'))
+if ~(exist(['flowacc_mex.' mexext],'file') == 3 && nargin<3 && strcmp(FD.type,'single'))
     if nargin == 1 || (nargin > 1 && isempty(W0))
         A = ones(FD.size);
     else        
