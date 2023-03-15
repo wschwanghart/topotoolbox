@@ -94,7 +94,13 @@ function h = plotdzm(SW,M,varargin)
 %     'xstretch' and 'ystretch'    {1 and 1}, scalar
 %     if 'plotmode' is set to 'image', the x- and y-values can be stretched
 %     by the corresponding factors to increase the resolution of the image.
+%   
+%     'backgrd'     'high','low',{'none'}
+%     if set to 'high' or 'low', the background is given the highest or
+%     lowest value in the data range, respectively. This help to control
+%     the appearance of the background when the plotmode is 'image'.
 %
+% 
 % Output arguments (optional)
 %
 %     h    handle object of the plotted features. If more than one feature
@@ -140,11 +146,13 @@ addParamValue(p,'colormap','pink',@(x) ismember(x,cmaps))
 addParamValue(p,'colormode','inverse',@(x) ismember(x,{'normal','inverse'}))
 addParamValue(p,'colorrange',[-inf,inf],@(x) isnumeric(x))
 addParamValue(p,'colorbar',false, @(x) islogical(x))
+addParamValue(p,'colorbarlabel','', @(x) ischar(x))
 addParamValue(p,'sortm','descend',@(x) ismember(x,{'ascend','descend','none'}))
 addParamValue(p,'plotmode','image',@(x) ismember(x,{'plot','scatter','image'}))
 addParamValue(p,'xstretch',1, @(x) isnumeric(x) & x>0)
 addParamValue(p,'ystretch',1, @(x) isnumeric(x) & x>0)
 addParamValue(p,'markersize',4,@(x) isnumeric(x))
+addParamValue(p,'backgrd','none',@(x) ismember(x,{'high','low','none'}))
 
 
 parse(p,SW,M,varargin{:});
@@ -160,11 +168,13 @@ colmap     = p.Results.colormap;
 colmode    = p.Results.colormode;
 colrange   = p.Results.colorrange;
 colbar     = p.Results.colorbar;
+cbarlabel  = p.Results.colorbarlabel;
 sortm      = p.Results.sortm;
 plotmode   = p.Results.plotmode;
 markersize = p.Results.markersize;
 xstretch   = p.Results.xstretch;
 ystretch   = p.Results.ystretch;
+backgrd    = p.Results.backgrd;
 
 
 warning('off')
@@ -230,7 +240,7 @@ d = d(~isnan(z));
 s = s(~isnan(z));
 z = z(~isnan(z));
 
-% Sort by slope
+% Sort
 if ismember(sortm,{'ascend','descend'})
     [s,ix] = sort(s,sortm);
     z = z(ix);
@@ -250,7 +260,7 @@ switch plotmode
         end
         
     case 'scatter'
-        scatter(d+distadjust,z,markersize,mfcol,'square','filled'), hold on
+        hout = scatter(d+distadjust,z,markersize,mfcol,'square','filled'); hold on
         
     case 'image'
         x = d+distadjust;
@@ -273,7 +283,7 @@ switch plotmode
         qx = floor(min(x)):swdx:ceil(max(x));
         %             qx = floor(min(x)):ceil(max(x));
         qy = floor(min(y)):ceil(max(y));
-        IM = GRIDobj(qx./swdx,qy,zeros(length(qy),length(qx)));
+        IM = GRIDobj(qx./swdx,qy,nan(length(qy),length(qx)));
         %             IM = GRIDobj(qx,qy,zeros(length(qy),length(qx)));
         ix = coord2ind(IM,xy(:,1)./swdx,xy(:,2));
         %             ix = coord2ind(IM,xy(:,1),xy(:,2));
@@ -284,6 +294,14 @@ switch plotmode
         %             IM.Z = imdilate(IM.Z,SE);
         %             SE = ones(5)./25;
         %             IM.Z = conv2(IM.Z,SE);
+        
+        switch backgrd
+            case 'high'
+                IM.Z(isnan(IM.Z)) = maxm;
+            case 'low'
+                IM.Z(isnan(IM.Z)) = minm;
+        end
+        
         
         hout = imagesc(qx./xstretch,flipud(qy'./ystretch),IM.Z,[minm maxm]);
         set(gca,'YDir','normal');
@@ -308,11 +326,19 @@ if colbar && ~strcmp(plotmode,'image')
     end
     yt = get(hc,'YTick');
     set(hc,'YTickLabel',(yt.*(maxm-minm)+minm)');
+    if not(isempty(cbarlabel))
+        hc.Label.String = cbarlabel;
+        hc.Label.FontSize = 10;
+        hc.FontSize = 10;
+    end
 elseif colbar && strcmp(plotmode,'image')
-    colorbar;
+    hc = colorbar;
 end
 
 if nargout==1;
     h = unique(hout);
+    if exist('hc','var')
+        h(end+1) = hc;
+    end
 end
 
