@@ -51,12 +51,31 @@ function [v,nIX,CP] = extractvaluesaroundpoints(P,z,varargin)
 %     CP      cell array of PPS objects, one for each point, with the river
 %             network extracted. 
 %    
-% Example
+% Example: Extract ksn values upstream and downstream of knickpoints
+%
+%     DEM  = GRIDobj('srtm_bigtujunga30m_utm11.tif');
+%     FD  = FLOWobj(DEM);
+%     S   = STREAMobj(FD,'minarea',1000);
+%     S = klargestconncomps(S,1);
+%     [~,kp] = knickpointfinder(S,DEM,'tol',30,'verbose',false,...
+%         'plot',false);
+%     P = PPS(S,'PP',kp.IXgrid,'z',DEM);
+%     ks = ksn(S,DEM,flowacc(FD));
+%     
+%     ksd = extractvaluesaroundpoints(P,ks,'direction','down',...
+%         'dfrompoint',200);
+%     ksu = extractvaluesaroundpoints(P,ks,'direction','up',...
+%         'dfrompoint',200);
+%     scatter(ksd,ksu)
+%     xlabel('Ksn downstream')
+%     ylabel('Ksn upstream')
+%     refline(1,0)
+%     box on
 %
 % See also: PPS, PPS/getmarks, nearest
 % 
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 21. May, 2022
+% Date: 20. September, 2022
 
 p = inputParser;
 p.FunctionName = 'extractvaluesaroundpoints';

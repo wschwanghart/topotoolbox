@@ -1,6 +1,6 @@
 function DEM = readopentopo(varargin)
 
-%READOPENTOPO read DEM using the opentopography.org API
+%READOPENTOPO Read DEM using the opentopography.org API
 %
 % Syntax
 %
@@ -22,6 +22,9 @@ function DEM = readopentopo(varargin)
 % Input arguments
 %
 %     Parameter name values
+%     'interactive'    {true} or false. If true, readopentopo will open a
+%                      GUI that enables interactive selection. If true,
+%                      then any given extent options will be ignored.
 %     'filename'       provide filename. By default, the function will save
 %                      the DEM to a temporary file in the system's temporary 
 %                      folder. The option 'deletefile' controls whether the
@@ -36,7 +39,9 @@ function DEM = readopentopo(varargin)
 %     'addmargin'      Expand the extent derived from 'extent',GRIDobj by a
 %                      scalar value in °. Default is 0.01. The option is
 %                      only applicable if extent is provided by a GRIDobj.
-%     'north'          northern boundary in geographic coordinates (WGS84)
+%     'north'          northern boundary in geographic coordinates (WGS84).
+%                      The option is ignored if the option 'extent' is
+%                      provided or if 'interactive', true.
 %     'south'          southern boundary
 %     'west'           western boundary
 %     'east'           eastern boundary
@@ -51,6 +56,10 @@ function DEM = readopentopo(varargin)
 %                      'NASADEM':    NASADEM Global DEM 
 %                      'COP30':      Copernicus Global DSM 30m 
 %                      'COP90':      Copernicus Global DSM 90m 
+%                      'EU_DTM:      Continental Europe Digital Terrain 
+%                                    Model 
+%                      'GEDI_L3':    Global Ecosystem Dynamics 
+%                                    Investigation 1x1 km DTM
 %                        
 %                      * requires API Key (see option 'apikey').
 %
@@ -58,10 +67,15 @@ function DEM = readopentopo(varargin)
 %                      myOpenTopo in the OpenTopography portal. You can
 %                      also create a text file in the folder IOtools named
 %                      opentopography.apikey which must contain the API
-%                      Key. If there is a file, there is no need to provide
-%                      this parameter name/value pair.
+%                      Key. If there is a file that contains the key, there 
+%                      is no need to provide it here.
 %     'verbose'        {true} or false. If true, then some information on
-%                      the process is shown in the command window
+%                      the process is shown in the command window.
+%     'checkrequestlimit' {true} or false. Opentopography implements
+%                      request limits. If the chose extent exceeds the 
+%                      request limit, readopentopo will issue an error. If
+%                      this option is set to false, readopentopo will try
+%                      to download.
 %     'deletefile'     {true} or false. True, if file should be deleted
 %                      after it was downloaded and added to the workspace.
 % 
@@ -80,17 +94,17 @@ function DEM = readopentopo(varargin)
 %     getoutline(DEM)
 %     hold off
 %
-% See also: GRIDobj, websave
+% See also: GRIDobj, websave, roipicker
 %
 % Reference: http://www.opentopography.org/developers
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 21. May, 2021
+% Date: 13. February, 2023
 
 
 p = inputParser;
 addParameter(p,'filename',[tempname '.tif']);
-addParameter(p,'interactive',false);
+addParameter(p,'interactive',true);
 addParameter(p,'extent',[]);
 addParameter(p,'addmargin',0.01);
 addParameter(p,'north',37.091337);
@@ -101,13 +115,28 @@ addParameter(p,'demtype','SRTMGL3');
 addParameter(p,'deletefile',true);
 addParameter(p,'verbose',true);
 addParameter(p,'apikey',[]);
+addParameter(p,'checkrequestlimit',true)
 parse(p,varargin{:});
 
-demtype = validatestring(p.Results.demtype,...
-    {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
+validdems = {'SRTMGL3','SRTMGL1','SRTMGL1_E',...
      'AW3D30','AW3D30_E','SRTM15Plus',...
-     'NASADEM','COP30','COP90'},'readopentopo');
-%url = 'http://portal.opentopography.org/otr/getdem';
+     'NASADEM','COP30','COP90',...
+     'EU_DTM','GEDI_L3'};
+
+demtype = validatestring(p.Results.demtype,...
+    validdems,'readopentopo');
+
+% Access global topographic datasets including SRTM GL3 (Global 90m), 
+% GL1 (Global 30m), ALOS World 3D and SRTM15+ V2.1 (Global Bathymetry 500m). 
+% Note: Requests are limited to 125,000,000 km2 for SRTM15+ V2.1, 
+% 4,050,000 km2 for SRTM GL3, COP90 and 450,000 km2 for all other data.
+requestlimits = [4.05e6, 0.45e6, 0.45e6, ...
+                 0.45e6, 0.45e6, 125e6,...
+                 0.45e6, 0.45e6, 4.05e6, ...
+                 0.45e6 50e7]; % km^2
+requestlimit  = requestlimits(strcmp(demtype,validdems));
+
+% API URL
 url = 'https://portal.opentopography.org/API/globaldem?';
 
 % create output file
@@ -124,7 +153,7 @@ if isempty(p.Results.apikey)
         % Remove trailing blanks, if there are any
         apikey = deblank(apikey);
     else
-        error('The DEM types NASADEM, COP30 and COP90 require an API Key')
+        error('Readopentopo requires an API Key. Please read the help.')
     end
 else
     apikey = p.Results.apikey;
@@ -161,22 +190,44 @@ end
 % now we have an extent. Or did the user request interactively choosing
 % the extent.
 if any([isempty(west) isempty(east) isempty(south) isempty(north)]) || p.Results.interactive
-    wm = webmap;
-    % get dialog box
-    messagetext = ['Zoom and resize the webmap window to choose DEM extent. ' ...
-                         'Click the close button when you''re done.'];
-    d = waitdialog(messagetext);
-    uiwait(d);    
-    [latlim,lonlim] = wmlimits(wm);
-    west = lonlim(1);
-    east = lonlim(2);
-    south = latlim(1);
-    north = latlim(2);
+    if p.Results.interactive == 2
+        wm = webmap;
+        % get dialog box
+        messagetext = ['Zoom and resize the webmap window to choose DEM extent. ' ...
+            'Click the close button when you''re done.'];
+        d = waitdialog(messagetext);
+        uiwait(d);
+        [latlim,lonlim] = wmlimits(wm);
+        west = lonlim(1);
+        east = lonlim(2);
+        south = latlim(1);
+        north = latlim(2);
+    else
+        ext = roipicker('requestlimit',requestlimit);
+        if isempty(ext)
+            DEM = [];
+            return
+        end
+        west = ext(2);
+        east = ext(4);
+        south = ext(1);
+        north = ext(3);
+    end
 end
-    
+
+% Check request limit
+a = areaint([south south north north],...
+            [west east east west],...
+            almanac('earth','radius','kilometers'));
+
+if p.Results.checkrequestlimit && (a > requestlimit)
+    error('TopoToolbox:readopentopo',...
+            ['Request limit (' num2str(requestlimit) ' km^2) exceeded.\n'...
+             'Your extent is ' num2str(a,1) ' km^2. Choose a smaller area.' ])
+end
+
 if p.Results.verbose
-    a = areaint([south south north north],...
-                [west east east west],almanac('earth','radius','kilometers'));
+
     disp('-------------------------------------')
     disp('readopentopo process:')
     disp(['DEM type: ' demtype])

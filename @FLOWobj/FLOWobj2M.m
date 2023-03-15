@@ -34,8 +34,8 @@ function M = FLOWobj2M(FD)
 
 
 nrc = prod(FD.size);
-switch FD.type
-    case 'multi'
+switch lower(FD.type)
+    case {'multi','dinf'}
         M = sparse(double(FD.ix),double(FD.ixc),FD.fraction,nrc,nrc);
     case 'single'
         M = sparse(double(FD.ix),double(FD.ixc),1,nrc,nrc);

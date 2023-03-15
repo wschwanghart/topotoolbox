@@ -39,8 +39,21 @@ function [MS,CCL] = tfactor(FD,S,varargin)
 % Output arguments
 %
 %     MS     Mapping structure of drainage basins including the field
-%            'tfactor'.
-%     CL     Structure array with centerlines.
+%            'tfactor'. MS contains the following fields:
+%            .Geometry - Geometry type required for export to shapefile
+%            .X, .Y    - Coordinates
+%            .areapx   - Area in pixels
+%            .Dd       - Distance to divides
+%            .Da       - Distance to stream
+%            .tfactor  - Da/Dd
+%     CL     Structure array with centerlines. CL contains the following
+%            fields:
+%            .Geometry - Geometry type required for export to shapefile
+%            .X, .Y    - Coordinates
+%            .DistToDivide - Distance to divide from centerline
+%            .DistToStream - Distance to stream
+%            .SmoothFactor - Smoothing factor (see STREAMobj/smooth) used
+%            to smooth the centerline. 
 %
 % Example
 %
@@ -49,11 +62,15 @@ function [MS,CCL] = tfactor(FD,S,varargin)
 %     S = trunk(STREAMobj(FD,'minarea',1000));
 %     [MS,CL] = tfactor(FD,S,'plot',true);
 %
+%     % Both outputs can be exported to shapefiles
+%     shapewrite(MS,'basins.shp')
+%     shapewrite(CL,'centerlines.shp')
+%
 %
 % See also: dbasymmetry, STREAMobj/removeedgeeffects, STREAMobj/smooth
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 3. March, 2022
+% Date: 5. July, 2022
 
 
 p = inputParser;

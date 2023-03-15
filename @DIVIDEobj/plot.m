@@ -107,6 +107,7 @@ addParameter(p,'junctions',[]);
 addParameter(p,'pause',0.1);
 addParameter(p,'divlimit','distance',@(x) ischar(validatestring(x,{'distance','order','none'})));
 addParameter(p,'limit',[1e3 inf],@(x) isnumeric(x));
+addParameter(p,'legend',true)
 
 % Parse
 parse(p,varargin{:});
@@ -178,7 +179,9 @@ switch style
     
     case 'plain'         
         h(1) = plot(x,y,pnpv{:});
-        legend(h,'divide');
+        if p.Results.legend
+            legend(h,'divide');
+        end
         
         if junctions && not(isempty(D.jct))
             hold on

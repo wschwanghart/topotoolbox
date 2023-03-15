@@ -1,4 +1,4 @@
-function P = polygon2GRIDobj(DEM,MS,field)
+function P = polygon2GRIDobj(DEM,MS,varargin)
 
 %POLYGON2GRIDobj convert polygon to a grid
 %
@@ -6,6 +6,7 @@ function P = polygon2GRIDobj(DEM,MS,field)
 %
 %     P = polygon2GRIDobj(DEM,MS)
 %     P = polygon2GRIDobj(DEM,MS,field)
+%     P = polygon2GRIDobj(DEM,MS,'pn',pv)
 %
 % Description
 %
@@ -24,6 +25,12 @@ function P = polygon2GRIDobj(DEM,MS,field)
 %            the fields X and Y.
 %     field  field name of the numeric data to be mapped. If not
 %            provided, polygon2GRIDobj will map logical values.
+%
+%     Parameter name/value pairs
+%
+%     'field'   field name of the numeric data to be mapped. If empty (the
+%               default), polygon2GRIDobj will map logical values. 
+%     'waitbar' {true} or false. false will suppress a waitbar.
 %
 % Output arguments
 %
@@ -46,26 +53,60 @@ function P = polygon2GRIDobj(DEM,MS,field)
 %           GRIDobj/createmask, line2GRIDobj, GRIDobj2polygon
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 4. May, 2018
+% Date: 22. September, 2022
 
 
 % 2 or 3 input arguments?
+narginchk(2,inf)
+
 if nargin == 2
+
     P = GRIDobj(DEM,'logical');
     writelogical = true;
     writeclass = @logical;
-else
-    % check the class of the field
-    cl = class(MS(1).(field));
-    P  = GRIDobj(DEM,cl);
-    writelogical = false;
-    switch cl
-        case {'double','single'}
-            P = P*nan(1,cl);
-        case 'logical'
-            writelogical = true;
-    end 
-    writeclass = @(x) cast(x,cl);
+    waitb = true;
+
+elseif nargin > 2
+    if nargin == 3
+        field = varargin{1};
+        waitb = true;
+    else
+        % Use input parser
+        p = inputParser;
+        p.FunctionName = 'polygon2GRIDobj';
+        addParameter(p,'field','',@(x) isfield(MS,x) || isempty(x))
+        addParameter(p,'waitbar',true)
+        parse(p,varargin{:})
+
+        field = p.Results.field;
+        waitb = p.Results.waitbar;
+    end
+
+    if isempty(field)
+
+        P = GRIDobj(DEM,'logical');
+        writelogical = true;
+        writeclass = @logical;
+    
+    else
+
+        % check the class of the field
+        cl = class(MS(1).(field));
+        P  = GRIDobj(DEM,cl);
+
+        writelogical = false;
+        switch cl
+            case {'double','single'}
+                % If double or single, start out with all values in the raster
+                % set to nan
+                P = P*nan(1,cl);
+            case 'logical'
+                % If logical, then all pixels are false
+                writelogical = true;
+        end
+        writeclass = @(x) cast(x,cl);
+    end
+
 end
 
 % get DEM coordinates
@@ -134,10 +175,16 @@ is_hole = false(size(MS));
 is_hole(IX_hole) = true;
 
 % loop through features of mapping structure MS
-h = waitbar(0);
+if waitb
+    h = waitbar(0);
+end
+
 for r = 1:numel(MS)
+
+    if waitb
     waitbar(r/numel(MS),h,...
         ['Please wait (' num2str(r) '/' num2str(numel(MS)) ')']);
+    end
     
     % get coordinates
     x = MS(r).X;
@@ -182,7 +229,11 @@ for r = 1:numel(MS)
     P.Z(ext(1):ext(2),ext(3):ext(4)) = FillMat;
 
 end
-close(h)
+
+% Close waitbar
+if waitb
+    close(h)
+end
 end
 
 function [BW,ext] = getmask(r,c,siz)

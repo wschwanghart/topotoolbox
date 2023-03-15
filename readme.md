@@ -113,6 +113,15 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 ***
 ## Version History
 
+### pre 2.5
+
+- new function: GRIDobj/randomsample - Create a spatially uniform sample based on a GRIDobj
+- new function: tthelp - Search for keywords on the TopoToolbox blog
+- new function: meltonruggedness (thanks for pointing out the bug, Kerry Leith!)
+- new function: PPS/cdftest
+- new function: GRIDobj/evansslope - calculate surface gradient using Evans method
+- new function: GRIDobj/GRIDobj2rgb
+
 ### 2.4
 
 - HyLands 1.0 added: see paper: Campforts, B. et al. (2020): HyLands 1.0: a Hybrid Landscape evolution 
