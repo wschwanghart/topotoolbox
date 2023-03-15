@@ -70,7 +70,6 @@ function MS = zonalstats(MS,attributes,varargin)
 %      'lucorner'    true or {false} calculates the coordinates of the left 
 %                    upper corner of the axis-aligned bounding box of the
 %                    region. Same can be used for llcorner, rucorner, etc.
-%      'waitbar'     {true} or false. 
 %
 % Output arguments
 %
@@ -80,7 +79,7 @@ function MS = zonalstats(MS,attributes,varargin)
 % See also: polygon2GRIDobj
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 22. September, 2022
+% Date: 4. September, 2020
 
 if nargin == 1
     a = cellfun(@(x,y) getarea(x,y),{MS.X},{MS.Y},'UniformOutput',false);
@@ -109,7 +108,6 @@ addParameter(p,'lucorner',false);
 addParameter(p,'llcorner',false);
 addParameter(p,'rucorner',false);
 addParameter(p,'rlcorner',false);
-addParameter(p,'waitbar',false)
 
 parse(p,varargin{:});
     
@@ -172,7 +170,7 @@ end
 if ~p.Results.overlapping
     TTID = num2cell(uint32(1:numel(MS)));
     [MS.TTID] = TTID{:};
-    label = polygon2GRIDobj(attributes{2},MS,'field','TTID','waitbar',false);
+    label = polygon2GRIDobj(attributes{2},MS,'TTID');
     TTID = num2cell((1:numel(MS)));
     [MS.TTID] = TTID{:};
     stats = regionprops(label.Z,'PixelIdxList');
@@ -182,16 +180,16 @@ end
 
 nr = numel(MS);
 
-if nr >= 2 && p.Results.waitbar
+if nr > 2;
 h = waitbar(0,['0 processed, ' num2str(nr) ' remaining']);
 wb = true;
 else
 wb = false;
 end
-for r = 1:nr
+for r = 1:nr;
     
     if p.Results.overlapping
-        II = polygon2GRIDobj(attgrid{1},MS(r),'waitbar',false);
+        II = polygon2GRIDobj(attgrid{1},MS(r));
         I  = II.Z;
     else
         I = stats(r).PixelIdxList;
@@ -209,7 +207,7 @@ for r = 1:nr
             minz = min(z);
             maxz = max(z);
             if isempty(minz); minz = nan; end
-            if isempty(maxz); maxz = nan; end
+            if isempty(maxz); maxz = nan; end;
             MS(r).([attname{r2} '_min']) = minz;
             MS(r).([attname{r2} '_max']) = maxz;
             MS(r).([attname{r2} '_median']) = median(z);

@@ -6,7 +6,7 @@ function cmap = ttscm(name,n,percrange)
 %     
 %     cmap = ttscm(name)
 %     cmap = ttscm(name,n)
-%     cmap = ttscm(name,n,percrange)
+%     cmap = ttscm(name,percrange)
 %     ttscm
 %     allowedcmaps = ttscm
 %

@@ -99,7 +99,6 @@ switch method
         dem     = wiener2(dem,ws);
     case 'std'
         dem     = stdfilt(dem,true(p.Results.kernel(1),p.Results.kernel(2)));
-
 end
 
 % and set nans at their previous position

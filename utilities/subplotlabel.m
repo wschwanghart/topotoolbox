@@ -27,20 +27,12 @@ classdef subplotlabel < handle
 %     Parameter name/value pairs
 % 
 %     'Location'    one of the following values: {'northwest'}, 'southwest', 
-%                   'northeast', 'southeast', 'northwestoutside'
+%                   'northeast', 'southeast'.
 %     'FontSize'    14
 %     'FontWeight'  {'normal'} or 'bold'
 %     'FontAngle'   {'normal'} or 'italic'
 %     'Color'       Font color. {'k'}
 %     'BackgroundColor'   {'none'} or any other way to define colors
-%     'Prefix'      ''. Character before the enumeral.
-%     'Postfix'     ''. Character behind the enumeral.
-%     'offset'      offset in x and y direction from the corner in
-%                   normalized axis units. By default, the offset is 0.01. 
-%                   offset can be a scalar or a two-element vector with an 
-%                   x and y offset. The direction of the offset depends on
-%                   the location with positiv values towards the interior
-%                   of the axes.
 %
 %     Applicable if called with fig handle only
 %
@@ -84,12 +76,11 @@ classdef subplotlabel < handle
 % NUM2ROMAN (https://github.com/beaudu/romanum)
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 15. November, 2022
+% Date: 22. February, 2021
 
     properties
         label
         LIMIX
-        offset
     end
     
     methods
@@ -107,10 +98,7 @@ classdef subplotlabel < handle
             addParameter(p,'BackgroundColor','none');
             addParameter(p,'FontWeight','normal');
             addParameter(p,'FontAngle','normal');
-            addParameter(p,'postfix','');
-            addParameter(p,'prefix','')
             addParameter(p,'Color','k');
-            addParameter(p,'offset',0.01,@(x) numel(x) <= 2)
             % addParameter(p,'Clipping','on');
             parse(p,varargin{:})
             
@@ -174,62 +162,41 @@ classdef subplotlabel < handle
             else
                 ax = p.Results.ax;
                 letter = p.Results.value;
-                offset = p.Results.offset;
                 
-                if numel(offset) == 1
-                    offset = [offset offset];
-                else
-                    offset = offset(:)';
-                end
-
                 xl = [0 1]; %xlim(ax);
                 yl = [0 1]; %ylim(ax);
-                loc = validatestring(p.Results.location,...
-                    {'northwest','southeast','northeast','southwest',...
-                     'nw','se','ne','sw',...
-                     'northwestoutside','nwo'});
-                switch lower(loc)
+                switch lower(p.Results.location)
                     case {'northeast','ne'}
                         IXX = 2;
                         IXY = 2;
-
-                        offset = offset .* [-1 -1];
-
                         valign = 'top';
                         halign = 'right';
                     case {'northwest','nw'}
                         IXX = 1;
                         IXY = 2;
-                        offset = offset .* [1 -1];
-
                         valign = 'top';
                         halign = 'left';
                     case {'southwest','sw'}
                         IXX = 1;
                         IXY = 1;
-                        offset = offset .* [1 1];
                         valign = 'bottom';
                         halign = 'left';
                     case {'southeast','se'}
                         IXX = 2;
                         IXY = 1;
-                        offset = offset .* [1 -1];
-
                         valign = 'bottom';
                         halign = 'right';
-                    case {'northwestoutside','nwo'}
-                        
-                        IXX = 1;
-                        IXY = 2;
-                        offset = offset .* [1 1];
-
-                        valign = 'bottom';
-                        halign = 'left';
                 end
                 
-                locx = xl(IXX) + offset(IXX);
-                locy = yl(IXY) + offset(IXY);
-               
+                locx = xl(IXX);
+                locy = yl(IXY);
+                
+                switch halign
+                    case 'right'
+                        letter = [' ' letter ' '];
+                    case 'left'
+                        letter = [' ' letter ' '];
+                end
                 
                 if ishold(ax)
                     ihold = true;
@@ -238,8 +205,7 @@ classdef subplotlabel < handle
                 end
                 
                 hold(ax,'on');
-                h.label = text(ax,locx,locy,...
-                    [p.Results.prefix letter p.Results.postfix],...
+                h.label = text(ax,locx,locy,letter,...
                     'VerticalAlignment',valign,...
                     'HorizontalAlignment',halign,...
                     'Color',p.Results.Color,...
@@ -251,7 +217,7 @@ classdef subplotlabel < handle
                     'FontWeight',p.Results.FontWeight,...
                     'Units','normalized',...
                     'Clipping','on');
-                h.offset = offset;
+                
                 
                 if ~ihold
                     hold(ax,'off');
@@ -266,9 +232,7 @@ classdef subplotlabel < handle
             for r = 1:numel(h)
                 xl = [0 1]; 
                 yl = [0 1];
-                h(r).label.Position = ...
-                    [xl(h(r).LIMIX(1))+h(r).offset(1) ...
-                     yl(h(r).LIMIX(2))+h(r).offset(2)];
+                h(r).label.Position = [xl(h(r).LIMIX(1)) yl(h(r).LIMIX(2))];
             end
         end
         function upper(h)

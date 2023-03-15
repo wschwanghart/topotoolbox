@@ -11,7 +11,6 @@ function DEM = readexample(example,varargin)
 %     readexample reads DEMs from the TopoToolbox DEM repository.
 %     Currently available examples are
 %
-%     'kedarnath'
 %     'kunashiri'
 %     'perfectworld'
 %     'taalvolcano'
@@ -32,7 +31,7 @@ function DEM = readexample(example,varargin)
 % See also: GRIDobj, websave, readopentopo
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 27. January, 2023
+% Date: 23. March, 2020
 
 
 
@@ -62,9 +61,6 @@ switch example
         istif = true;
     case 'perfectworld'
         url = 'https://github.com/wschwanghart/DEMs/raw/master/perfectworld.tif';
-        istif = true;
-    case 'kedarnath'
-        url = 'https://github.com/wschwanghart/DEMs/raw/master/kedarnath.tif';
         istif = true;
     otherwise 
         error('There is no such example file.')

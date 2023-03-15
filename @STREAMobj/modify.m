@@ -172,7 +172,6 @@ addParamValue(p,'downstreamto',[],@(x) isa(x,'GRIDobj') || isnumeric(x) || isnal
 addParamValue(p,'rmconncomps',[],@(x) isnumeric(x) && x>0 && isscalar(x));
 addParamValue(p,'rmconncomps_ch',[],@(x) isnumeric(x) && x>=0 && isscalar(x));
 addParamValue(p,'rmupstreamtoch',[],@(x) isa(x,'STREAMobj'));
-%addParamValue(p,'between',[],@(x) isnumeric(x) && size(x,2) == 2);
 addParamValue(p,'fromch2IX',[]);
 addParamValue(p,'rmnodes',[]);
 addParamValue(p,'clip',[],@(x) (isnumeric(x) && size(x,2)==2 && size(x,1)>2) || isa(x,'GRIDobj'));
@@ -257,27 +256,8 @@ elseif ~isempty(p.Results.upstreamto)
 %     I = false(size(S.x));
     I = II;
     for r = numel(S.ix):-1:1
-        I(S.ix(r)) = II(S.ixc(r)) || I(S.ixc(r))  || I(S.ix(r));
+        I(S.ix(r)) = II(S.ixc(r)) || I(S.ixc(r));
     end
-% elseif ~isempty(p.Results.between)
-%     %% between
-%     M = sparse(S.ix,S.ixc,1,numel(S.x),numel(S.x));
-%     G = graph(M,T);
-%     ix = p.Results.between;
-%     [II,ixs] = ismember(ix,S.IXgrid);
-%     if any(II==0)
-%         error('All cells must be on the network.')
-%     end
-%     % sort indices
-%     [~,temp] = sort(S.distance(ixs),1,'ascend');
-%     ixs = ixs()
-% 
-%     I  = logical(getnal(S));
-%     for r = 1:size(ix,1)
-%         [II,ixs] = ismember(S.IXgrid,ix(r,:));
-%         
-%         I(shortestpath(G,ixs))
-%     end
     
 elseif ~isempty(p.Results.rmupstreamtoch)
     

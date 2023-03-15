@@ -56,7 +56,7 @@ p = inputParser;
 p.FunctionName = 'PPS/voronoi';
 addParameter(p,'distance',[]);
 addParameter(p,'d3d',false);
-addParameter(p,'shuffle',false);
+addParameter(p,'shuffle',true);
 % Parse
 parse(p,varargin{:});
 

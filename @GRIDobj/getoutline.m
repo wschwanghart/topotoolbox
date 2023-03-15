@@ -97,14 +97,8 @@ if nargout == 0
             hold off;
         end
     else
-        try
         [lat,lon] = minvtran(DEM.georef.mstruct,x,y);
-        catch
-            lat = y;
-            lon = x;
-        end
         wmline(lat,lon)
-
     end
         
 elseif nargout == 1
