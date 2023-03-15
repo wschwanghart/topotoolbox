@@ -111,6 +111,8 @@ classdef PPS
 % river networks. Earth Surface Processes and Landforms, 46 (9), 1847-1862. 
 % [DOI: 10.1002/esp.5127]
 %
+% Also check out the Zenodo repository with examples 10.5281/zenodo.4658411
+%
 % See also: GRIDobj, FLOWobj, STREAMobj, STREAMobj/snap2stream, SWATHobj
 %           DIVIDEobj
 %

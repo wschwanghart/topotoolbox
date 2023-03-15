@@ -80,7 +80,7 @@ function s = rhohat(P,varargin)
 % See also: PPS 
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 14. September, 2021
+% Date: 12. December, 2022
 
 % Check input arguments
 p = inputParser;
@@ -129,10 +129,17 @@ rhou = in*Nu./Nb;
 rhol = in*Nl./Nb;
 
 if p.Results.plot
-    
+
+    % draw rhohat
     ax = gca;
-    hold(ax,'on');
-    box on
+    if ishold(ax)
+        ISHOLD = true;
+    else
+        ISHOLD = false;
+        cla(ax, 'reset')
+        hold(ax,'on')
+        box(ax,'on')
+    end
     
     % plot intensity line with acceptance intervals
     if p.Results.intline
@@ -142,19 +149,19 @@ if p.Results.plot
             'accintervals',true,'plot',false,'ksdensity',p.Results.ksdensity,'function','pdf');
         rhoaccu = in*Nuacc./Nbacc;
         rhoaccl = in*Nlacc./Nbacc;
-        patch([xacc;flipud(xacc)],[rhoaccu;flipud(rhoaccl)],[0.9 0.9 0.9],...
+        patch(ax,[xacc;flipud(xacc)],[rhoaccu;flipud(rhoaccl)],[0.9 0.9 0.9],...
             'EdgeColor','none','FaceAlpha',p.Results.FaceAlpha);
-        plot([min(x),max(x)],[in in],'--k');
+        plot(ax,[min(x),max(x)],[in in],'--k');
     end
     
     % plot confidence intervals
     if p.Results.confintervals
-        patch([x; flipud(x)],[rhou;flipud(rhol)],p.Results.FaceColor,...
+        patch(ax,[x; flipud(x)],[rhou;flipud(rhol)],p.Results.FaceColor,...
             'EdgeColor','none','FaceAlpha',p.Results.FaceAlpha);
     end
     
     % plot rho line
-    plot(x,rho(:),'LineWidth',p.Results.LineWidth,...
+    plot(ax,x,rho(:),'LineWidth',p.Results.LineWidth,...
                   'LineStyle',p.Results.LineStyle,...
                   'Color',p.Results.Color,...
                   'Marker','none')
@@ -171,7 +178,11 @@ if p.Results.plot
         xlinerel(c(P.PP),rel,'-','Color',p.Results.indcolor)
         
     end
-    hold off
+    
+    if ~ISHOLD
+        hold(ax,'off')
+    end
+
     ylabel(['\rho(' p.Results.name ')'])
     xlabel(p.Results.name)
     
