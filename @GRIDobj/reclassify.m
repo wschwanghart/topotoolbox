@@ -31,9 +31,8 @@ function DEM = reclassify(DEM,varargin)
 %     'std'              [s = scale of standard deviation, e.g. 2]
 %                        equal intervals with a width of std/s. Bins are
 %                        centered around sample mean
-%     'otsu'             [number of classes, must be (2 4 8 16 etc)] 
-%                        recursive Otsu thresholding (see function 
-%                        graythresh)
+%     'otsu'             [number of classes, must be between 2 and 5] 
+%                        
 %
 % Output argument
 %
@@ -48,7 +47,7 @@ function DEM = reclassify(DEM,varargin)
 % See also: k_means, graythresh
 % 
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 18. January, 2013
+% Date: 28. March, 2023
 
 narginchk(1,3)
 
@@ -62,7 +61,7 @@ allowedmethods = {'equalintervals',...
                   'otsu'...
                  };
 % nr of classes
-if nargin == 1;
+if nargin == 1
     method = 'equalinterval';
     num = 10;
 else
@@ -126,7 +125,7 @@ switch method
     case 'definedquantiles'
         validateattributes(num,{'numeric'},{'vector','>',0,'<=',1});
         p = num(:);
-        if p(end) < 1;
+        if p(end) < 1
             p(end+1) = 1;
         end
         
@@ -150,7 +149,7 @@ switch method
         minz = min(z);
         maxz = max(z);
         
-        edges1 = [mz-s/2 :-s: minz];
+        edges1 = mz-s/2 :-s: minz;
         if edges1(end) > minz
             edges1(end+1) = -inf;
         else
@@ -164,7 +163,7 @@ switch method
         DEM.Z = reshape(DEM.Z,DEM.size);
         DEM.Z(INAN) = nan;
         
-    case 'kmeans';
+    case 'kmeans'
         
         validateattributes(num,{'numeric'},{'scalar','integer','>',1});
         z = DEM.Z(~INAN);
@@ -174,15 +173,16 @@ switch method
         
         DEM.Z(:,:) = nan;
         DEM.Z(~INAN) = IX;
-    case 'otsu';        
+    case 'otsu'        
         validateattributes(num,{'numeric'},{'scalar','integer','>',1});
-        if ceil(log2(num)) ~= log2(num);
-            error('TopToolbox:GRIDobj','log2(value) must be an integer')
-        end
                 
-        INAN = ~INAN;
-        z  = mat2gray(DEM.Z(INAN));
-        DEM.Z(INAN) = cast(otsu(z,num),class(DEM.Z));
+        z  = DEM.Z(~isnan(DEM.Z));
+        z  = z(:);
+        [N,edges]  = histcounts(z);
+        zbins =  edges(1:end-1) + (edges(2)-edges(1))/2;
+        thresholds = multilevel_otsu(N,num,zbins);
+        DEM = reclassify(DEM,'definedintervals',thresholds);
+        % DEM.Z(INAN) = cast(otsu(z,num),class(DEM.Z));
 end
 
 end
