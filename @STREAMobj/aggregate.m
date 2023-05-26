@@ -1,6 +1,6 @@
 function zs = aggregate(S,DEM,varargin)
 
-%AGGREGATE aggregating values of reaches
+%AGGREGATE Summarizing values within segments of the stream network
 %
 % Syntax
 %
@@ -11,8 +11,10 @@ function zs = aggregate(S,DEM,varargin)
 % Description
 %
 %     Values along stream networks are frequently affected by scatter.
-%     This function removes scatter by averaging over values in reaches
-%     between confluences or reaches of equal length.
+%     This function removes scatter by averaging over values in drainage
+%     basins, reaches between confluences, reaches of equal length, or
+%     reaches whose endpoints are defined by locations on the stream 
+%     network.
 %
 % Input parameters
 %
@@ -24,15 +26,26 @@ function zs = aggregate(S,DEM,varargin)
 %
 %     'method'     {'reach'}, 'betweenconfluences','drainagebasins',
 %                  'locations'
+%                  'reach': values in A are aggregated in river reaches
+%                  with segment length as provided in the option
+%                  'seglength'
+%                  'betweenconfluences': values in A are aggregated in
+%                  river sections between confluences.
+%                  'drainagebasins': values in A are aggregated in
+%                  individual drainagebasins.
+%                  'locations': values in A are aggregated between
+%                  locations which are provided by the linear index given
+%                  in the option 'ix'. See example 2.
 %     'split'      {false} or true. True will identify individual drainage
-%                  basins and process each individually in parallel (requires
-%                  the parallel processing toolbox).
+%                  basins and process each individually in parallel 
+%                  (requires the parallel processing toolbox).
 %     'ix'         if 'method' is 'locations', linear indices of split
-%                  locations must be provided.
+%                  locations must be provided. Linear indices must lie on
+%                  the stream network (see STREAMobj/snap2stream).
 %     'seglength'  segment length (default 10*S.cellsize)
 %     'aggfun'     anonymous function as aggregation function. Default is
-%                  @mean. The function must take a vector and return a scalar
-%                  (e.g. @max, @min, @std, @(x) prctile(x,25), ...)
+%                  @mean. The function must take a vector and return a 
+%                  scalar (e.g. @max, @min, @std, @(x) prctile(x,25), ...)
 %
 % Output parameters
 %
@@ -91,7 +104,8 @@ addParameter(p,'seglength',S.cellsize*11);
 addParameter(p,'aggfun',@mean);
 
 parse(p,varargin{:});
-method = validatestring(p.Results.method,{'betweenconfluences','reach','drainagebasins','locations'});
+method = validatestring(p.Results.method,...
+    {'betweenconfluences','reach','drainagebasins','locations'});
 
 % get node attribute list with elevation values
 if isa(DEM,'GRIDobj')
