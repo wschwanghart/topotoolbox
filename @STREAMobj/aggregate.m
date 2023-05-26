@@ -22,10 +22,13 @@ function zs = aggregate(S,DEM,varargin)
 %
 % Parameter name/value pairs
 %
-%     'method'     {'reach'}, 'betweenconfluences','drainagebasins'
+%     'method'     {'reach'}, 'betweenconfluences','drainagebasins',
+%                  'locations'
 %     'split'      {false} or true. True will identify individual drainage
 %                  basins and process each individually in parallel (requires
 %                  the parallel processing toolbox).
+%     'ix'         if 'method' is 'locations', linear indices of split
+%                  locations must be provided.
 %     'seglength'  segment length (default 10*S.cellsize)
 %     'aggfun'     anonymous function as aggregation function. Default is
 %                  @mean. The function must take a vector and return a scalar
@@ -35,7 +38,7 @@ function zs = aggregate(S,DEM,varargin)
 %
 %     as     node attribute list with aggregated values
 %
-% Example: Calculating ksn values
+% Example 1: Calculating ksn values within segments of 2000 m
 %
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
 %     FD = FLOWobj(DEM,'preprocess','carve');
@@ -44,17 +47,35 @@ function zs = aggregate(S,DEM,varargin)
 %     g = gradient(S,imposemin(S,DEM));
 %     A = flowacc(FD);
 %     a = getnal(S,A)*(DEM.cellsize^2);
-%     ksn = g./(a.^(-0.45));
-%     ksn = aggregate(S,ksn,'seglength',2000);
-%     plotc(S,ksn)
+%     k = ksn(S,DEM,A);
+%     k = aggregate(S,k,'seglength',2000);
+%     plotc(S,k)
 %     axis image
 %     colormap(jet)
+%     colorbar
+%
+% Example 2: Calculating ksn values in river reaches separated by 
+%            knickpoints
+%
+%     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
+%     FD = FLOWobj(DEM,'preprocess','carve');
+%     S = STREAMobj(FD,'minarea',1000);
+%     S = klargestconncomps(S);
+%     [~,kp] = knickpointfinder(S,DEM,'tol',20,'split',false,...
+%                               'plot',false,'verbose',false);
+%     A = flowacc(FD);
+%     k  = ksn(S,DEM,A);
+%     kk = aggregate(S,k,'method','locations','ix',kp.IXgrid);
+%     plotc(S,kk)
+%     hold on
+%     plot(kp.x,kp.y,'+k')
+%     colormap(turbo)
 %     colorbar
 %
 % See also: STREAMobj/labelreach, STREAMobj/smooth
 % 
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 19. June, 2017
+% Date: 26. May, 2023
 
 
 % check and parse inputs
@@ -64,12 +85,13 @@ p = inputParser;
 p.FunctionName = 'STREAMobj/aggregate';
 addParameter(p,'method','reach'); 
 addParameter(p,'split',false);
+addParameter(p,'ix',[]);
 % parameters for block and reach
 addParameter(p,'seglength',S.cellsize*11);
 addParameter(p,'aggfun',@mean);
 
 parse(p,varargin{:});
-method = validatestring(p.Results.method,{'betweenconfluences','reach','drainagebasins'});
+method = validatestring(p.Results.method,{'betweenconfluences','reach','drainagebasins','locations'});
 
 % get node attribute list with elevation values
 if isa(DEM,'GRIDobj')
@@ -115,7 +137,15 @@ switch method
         label = conncomps(S);
         zm    = accumarray(label,z,[max(label) 1],p.Results.aggfun,nan);
         zs    = zm(label);
+    case 'locations'
+
+        S2 = split(S,p.Results.ix);        
+        [c,n]  = conncomps(S2);
+        za = accumarray(c,z,[n 1],p.Results.aggfun,nan,false);
+        zs = za(c);
 end
+
+zs = nal2nal(S,S2,zs);
 
 end
         
