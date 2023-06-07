@@ -121,6 +121,8 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 - new function: PPS/cdftest
 - new function: GRIDobj/evansslope - calculate surface gradient using Evans method
 - new function: GRIDobj/GRIDobj2rgb
+- new function: getgriddedline(see utilities)
+- new function: table2STREAMobj (see IOtools)
 
 ### 2.4
 
