@@ -48,7 +48,6 @@ if nargin == 1
     prc = 2;
     symmetric = false;
 elseif nargin == 2
-    validate
     symmetric = false;
 end
     
