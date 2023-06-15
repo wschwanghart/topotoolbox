@@ -144,6 +144,7 @@ switch method
         [c,n] = conncomps(S2);
         za = accumarray(c,z,[n 1],p.Results.aggfun,nan,false);
         zs = za(c);
+        zs = nal2nal(S,S2,zs);
     case 'reach'
         label = labelreach(S,'seglength',p.Results.seglength);   
         zm    = accumarray(label,z,[max(label) 1],p.Results.aggfun,nan);
@@ -152,6 +153,7 @@ switch method
         label = conncomps(S);
         zm    = accumarray(label,z,[max(label) 1],p.Results.aggfun,nan);
         zs    = zm(label);
+        
     case 'locations'
         if isempty(p.Results.ix)
             error('The optional argument ix must be supplied')
@@ -166,9 +168,10 @@ switch method
         [c,n]  = conncomps(S2);
         za = accumarray(c,z,[n 1],p.Results.aggfun,nan,false);
         zs = za(c);
+        zs = nal2nal(S,S2,zs);
 end
 
-zs = nal2nal(S,S2,zs);
+
 
 end
         
