@@ -42,6 +42,7 @@ function zs = aggregate(S,DEM,varargin)
 %     'ix'         if 'method' is 'locations', linear indices of split
 %                  locations must be provided. Linear indices must lie on
 %                  the stream network (see STREAMobj/snap2stream).
+%                  Alternatively, a PPS object can be provided.
 %     'seglength'  segment length (default 10*S.cellsize)
 %     'aggfun'     anonymous function as aggregation function. Default is
 %                  @mean. The function must take a vector and return a 
@@ -152,8 +153,16 @@ switch method
         zm    = accumarray(label,z,[max(label) 1],p.Results.aggfun,nan);
         zs    = zm(label);
     case 'locations'
+        if isempty(p.Results.ix)
+            error('The optional argument ix must be supplied')
+        elseif isa(p.Results.ix,'PPS')
+            P = p.Results.ix;
+            ix = P.S.IXgrid(P.PP);
+        else
+            ix = p.Results.ix;
+        end
 
-        S2 = split(S,p.Results.ix);        
+        S2 = split(S,ix,'outgoing',false);        
         [c,n]  = conncomps(S2);
         za = accumarray(c,z,[n 1],p.Results.aggfun,nan,false);
         zs = za(c);

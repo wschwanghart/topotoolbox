@@ -8,6 +8,7 @@ function S = split(S,varargin)
 %     Ss = split(S,ix)
 %     Ss = split(S,C)
 %     Ss = split(S,...,removeedge)
+%     Ss = split(S,...,clean)
 %
 % Description
 %
@@ -30,6 +31,9 @@ function S = split(S,varargin)
 %     removeedge {'incoming'} or 'outgoing'. 'incoming' removes the edge or
 %           edges between ix and its upstream neighbor(s). 'outgoing'
 %           removes the downstream edge.
+%     clean {true} or false. If true, split will call the function
+%           STREAMobj/clean to remove nodes in the stream network that do
+%           not have an incoming or outgoing edge.
 % 
 % Output arguments
 %
@@ -52,13 +56,13 @@ function S = split(S,varargin)
 %     plotc(S2,S2.distance)
 %
 % See also: STREAMobj, STREAMobj/modify, STREAMobj/randlocs, 
-%           STREAMobj/STREAMobj2cell
+%           STREAMobj/STREAMobj2cell, STREAMobj/clean
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
 % Date: 3. December, 2018
 
 
-narginchk(1,3)
+narginchk(1,4)
 if nargin == 1
     V = streampoi(S,'confluences','logical');
 else
@@ -86,4 +90,13 @@ end
 S.ix(I) = [];
 S.ixc(I) = [];
 
-S = clean(S);
+if nargin <= 3
+    S = clean(S);
+else
+    if varargin{3}
+        S = clean(S);
+    end
+end
+
+
+% 
