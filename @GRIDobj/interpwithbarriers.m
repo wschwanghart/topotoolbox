@@ -11,11 +11,11 @@ function ZI = interpwithbarriers(DEM,x,y,z,varargin)
 %
 %     interpwithbarriers implements a laplacian interpolation with
 %     barriers. While laplacian interpolation generates a smoothly varying
-%     surface (the ridge parameter) enables increasing the smoothness,
+%     surface (the ridge parameter controls the smoothness),
 %     there may be sharp local differences, i.e. along fault systems or 
 %     boundaries. Note that together with a ridge parameter > 0, the
-%     interpolator is not exact, i.e., the surface passes not through the
-%     observations.
+%     interpolator is not exact, i.e., the surface will not passes 
+%     through observations.
 %
 % Input arguments
 %
@@ -75,6 +75,9 @@ x = x(:);
 y = y(:);
 z = z(:);
 
+% z must have be double precision
+z = double(z);
+
 % Make sure that they have the same size
 assert(isequal(size(x),size(y)) & isequal(size(x), size(z)), ...
     'x, y and z must have equal size.' )
@@ -125,6 +128,7 @@ else
     if isempty(p.Results.lb) && isempty(p.Results.ub) 
 
         zi   = [A;Asd]\[ZI.Z(:);zeros(n,1)];
+
     
     else
 
@@ -140,6 +144,10 @@ else
 end
 
 % Deal with the barrier which is nan or zero
-ZI.Z(F.Z>0) = nan;
+ZI.Z(F.Z>0 | ZI.Z == 0) = nan;
+
+ZI = inpaintnans(ZI,'neighbors');
 ZI = inpaintnans(ZI);
+
+% 
     
