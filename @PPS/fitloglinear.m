@@ -120,8 +120,12 @@ parse(p,varargin{:});
 % Get covariates
 X = getcovariate(P,c);
 % Get response variable
-y = zeros(numel(P.S.x),1);
-y(P.PP) = 1;
+switch lower(p.Results.distribution)
+    case 'binomial'
+        y = +as(P,'logical');
+    case 'poisson'
+        y = as(P,'nal');
+end
 
 % Options for fitglm and stepwise
 glmopts = p.Unmatched;
@@ -160,7 +164,6 @@ else
     % Use stepwise GLM
     mdl = stepwiseglm(inp{:},fllopts.modelspec,...
         'Distribution',fllopts.distribution,'weights',fllopts.weights,glmopts{:});
-    
 end
 
 % modelled intensities

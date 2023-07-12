@@ -5,6 +5,7 @@ function [P,nalix,markix] = modify(P,varargin)
 % Syntax
 %
 %      P2 = modify(P,'pn',pv)
+%      [P2,nalix,markix] = ...
 %
 % Description
 %
