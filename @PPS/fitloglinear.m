@@ -168,7 +168,7 @@ else
 end
 
 % modelled intensities
-if p.results.predoffset
+if p.Results.predoffset
     p   = predict(mdl,X,'offset',mdl.Offset);
 else
     p   = predict(mdl,X);
