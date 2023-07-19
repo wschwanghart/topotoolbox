@@ -52,6 +52,6 @@ if nargin == 2
     covariates = mdl.Variables(:,1:end-1);
 end
 
-ysim = random(mdl,covariates);
+ysim = random(mdl,covariates,'offset',mdl.Offset);
 Psim = P;
 Psim.PP = find(ysim);

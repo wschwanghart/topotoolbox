@@ -115,6 +115,7 @@ addParameter(p,'stepwise',false,@(x) isscalar(x));
 addParameter(p,'modelspec','linear');
 addParameter(p,'distribution','binomial');
 addParameter(p,'weights',getnal(P.S)+1);
+addParameter(p,'predoffset',true)
 parse(p,varargin{:});
 
 % Get covariates
@@ -167,7 +168,11 @@ else
 end
 
 % modelled intensities
-p   = predict(mdl,X);
+if p.results.predoffset
+    p   = predict(mdl,X,'offset',mdl.Offset);
+else
+    p   = predict(mdl,X);
+end
 d   = distance(P.S,'node_to_node');
 d   = mean(d);
 int = p./d; %.cellsize;
