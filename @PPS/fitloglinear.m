@@ -102,6 +102,8 @@ function [mdl,int,rts,rtssigma,ismx,sigmapred] = fitloglinear(P,c,varargin)
 %     xline([mx-sigmapred mx+sigmapred],':')
 %     xline([mx-sigmamx mx+sigmamx],'--')
 %     xline(mx)
+%
+% 
 %     
 %
 % See also: PPS, PPS/random, fitglm, stepwiseglm
