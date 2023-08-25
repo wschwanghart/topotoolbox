@@ -86,6 +86,18 @@ function zs = aggregate(S,DEM,varargin)
 %     colormap(turbo)
 %     colorbar
 %
+% Example 3: Remove first-order streams shorter than 2000 m
+%
+%     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
+%     FD  = FLOWobj(DEM,'preprocess','carve');
+%     S   = STREAMobj(FD,'minarea',1000);
+%     plot(S,'b')
+%     so  = streamorder(S);
+%     d   = aggregate(S,S.distance,'method','between','aggfun',@range);
+%     S2   = subgraph(S,~(so == 1 & d < 2000));
+%     hold on
+%     plot(S2,'k')
+%
 % See also: STREAMobj/labelreach, STREAMobj/smooth
 % 
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
@@ -141,6 +153,7 @@ end
 switch method
     case 'betweenconfluences'
         S2 = split(S);
+        z  = nal2nal(S2,S,z);
         [c,n] = conncomps(S2);
         za = accumarray(c,z,[n 1],p.Results.aggfun,nan,false);
         zs = za(c);
