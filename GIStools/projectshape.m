@@ -72,10 +72,12 @@ end
 try
     
     % GRIDobj is projected
+    p = projcrs(GRID.georef.GeoKeyDirectoryTag.ProjectedCSTypeGeoKey);
     for i = 1 : length(S)
         lon = S(i).X;
         lat = S(i).Y;
-        [x,y] = mfwdtran(GRID.georef.mstruct,lat,lon);
+        %[x,y] = mfwdtran(GRID.georef.mstruct,lat,lon);
+        [x,y] = projfwd(p,lat,lon);
         S(i).X = x;
         S(i).Y = y;
     end
