@@ -9,6 +9,7 @@ function [DEMc,MASK] = crop(DEM,varargin)
 %     DEMc = crop(DEM,I,fillval)
 %     DEMc = crop(DEM,ix)
 %     DEMc = crop(DEM,x,y)
+%     DEMc = crop(DEM,ext)
 %     DEMc = crop(DEM,'interactive');
 %
 % Description 
@@ -25,6 +26,7 @@ function [DEMc,MASK] = crop(DEM,varargin)
 %              value (crop and clip by setting fillval to nan) 
 %     ix       linear index into the DEM
 %     x,y      coordinate vectors
+%     ext      cell array with extent as returned by the function getextent
 %
 % Example
 %
@@ -83,6 +85,11 @@ elseif nargin >= 2
         end
         % MASK = bwperim(MASK);
         IX  = find(MASK);
+        
+        if numel(IX) <= 2
+            error('Mask must have at least two true pixels')
+        end
+
     elseif nargin == 2
         if isnumeric(varargin{1})
             % indices are supplied
@@ -95,6 +102,15 @@ elseif nargin >= 2
             if any(IX<1) || any(IX>prod(DEM.size))
                 error('TopoToolbox:GRIDobj',...
                     ['Index must range between 1 and ' num2str(prod(DEM.size)) '.'])
+            end
+        elseif iscell(varargin{1})
+            % extent supplied as returned by the function getextent
+            ext = varargin{1};
+            x   = ext{1};
+            y   = ext{2};
+            IX  = coord2ind(DEM,x,y);
+            if any(isnan(IX))
+                error('Crop mask is outside the grid extent.');
             end
             
         else
@@ -191,7 +207,11 @@ DEMc.xyunit = DEM.xyunit;
 if ~isempty(DEM.georef)
     % Copy all referencing information
     DEMc.georef = DEM.georef;
-    DEMc.georef.SpatialRef = refmatToMapRasterReference(DEMc.refmat, DEMc.size);
+    if ~isgeographic(DEMc)
+        DEMc.georef.SpatialRef = refmatToMapRasterReference(DEMc.refmat, DEMc.size);
+    else
+        DEMc.georef.SpatialRef = refmatToGeoRasterReference(DEMc.refmat,DEMc.size);
+    end
     
 end
     
