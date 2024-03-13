@@ -111,7 +111,7 @@ function z = fastscape(S,z,a,varargin)
 %     bct.z = [zb zb zb-50 zb-50 zb-200 zb-200]';
 %     z   = fastscape(ST,DEM,A,'k',4e-5,'plot',true,...
 %                     'bc',bct,'bctype','elev','tspan',5e5,...
-%                     'u',0.003,'dt',50, 'n',1.3);
+%                     'u',0.003,'dt',50, 'n',1.3,'ploteach',50);
 %
 %
 %
