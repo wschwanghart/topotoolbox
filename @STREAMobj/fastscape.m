@@ -51,6 +51,8 @@ function z = fastscape(S,z,a,varargin)
 %                 will be written to the disk. 
 %     gifopts     Structure array with gif options for the function gif
 %                 (see help gif)
+%     ylim        Two-element vector with minimum and maximum of y-axis if
+%                 'plot' is true
 %
 % Example
 %
@@ -93,6 +95,25 @@ function z = fastscape(S,z,a,varargin)
 %                     'bc',bct,'bctype','elev','tspan',500000,...
 %                     'u',0.003,'dt',50);
 %
+%     % You can also set a function to control boundary conditions. Here,
+%     % we set boundaries as rates of baselevel drop 
+%     bcfun = @(t) (sin(t/1e4) - 1)/1000 * 2;
+%     z   = fastscape(S,DEM,A,'k',1e-5,'plot',true,...
+%                     'bc',bcfun,'bctype','rate','tspan',500000,...
+%                     'u',0.003,'dt',50);
+%
+%     % Here's another example that shows how a knickpoint consumes another
+%     % if n ~= 1.
+%     ST  = trunk(S);
+%     bct = table;
+%     bct.t = [0 200000 200500 220000 220500 5e5]';
+%     zb  = DEM.Z(streampoi(S,'outlet','ix'));
+%     bct.z = [zb zb zb-50 zb-50 zb-200 zb-200]';
+%     z   = fastscape(ST,DEM,A,'k',4e-5,'plot',true,...
+%                     'bc',bct,'bctype','elev','tspan',5e5,...
+%                     'u',0.003,'dt',50, 'n',1.3);
+%
+%
 %
 % References
 %
@@ -116,12 +137,13 @@ function z = fastscape(S,z,a,varargin)
 %
 % Authors: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de) and
 %          Benjamin Campforts.
-% Date: 28. April, 2022
+% Date: 12. March, 2024
 
 
 gifopts.DelayTime = 1/15;
 gifopts.LoopCount = inf;
-gifopts.frame     = gcf;
+% gifopts.frame     = gcf; % commented out because it will open a window
+% even in the case if no plot is wanted.
 gifopts.overwrite = false;
 
 %% Input parsing
@@ -144,6 +166,7 @@ addParameter(p,'ploteach',10)
 addParameter(p,'plotchi',0)
 addParameter(p,'gifname','')
 addParameter(p,'gifopts',gifopts)
+addParameter(p,'ylim',[],@(x) isempty(x) || ((numel(x) == 2) && (x(1)< x(2))))
 parse(p,S,z,a,varargin{:})
 
 % STREAMobj
@@ -151,11 +174,21 @@ S = p.Results.S;
 % Elevations
 z = ezgetnal(S,p.Results.z);
 z = imposemin(S,z);
+
+% Set y limits if plot is required
+if isempty(p.Results.ylim) 
+    ylimauto = true;
+else
+    ylimauto = false;
+    yl = p.Results.ylim;
+end
+
 % Upstream areas
 a = ezgetnal(S,p.Results.a);
 if p.Results.convertpx
     a = a*S.cellsize^2;
 end
+
 % Uplift
 u = ezgetnal(S,p.Results.uplift);
 % Erodibility K
@@ -206,22 +239,32 @@ elseif isnumeric(p.Results.bc) && strcmp(bctype,'elev')
                  cumsum(dte)');
     zb = zb';
 elseif istable(p.Results.bc)
+    BCT = p.Results.bc;
+    if BCT.t(end) < tspan
+        BCT.t(end) = tspan;
+        warning('TopoToolbox:fastscape',...
+            ['The last element in the time column of the boundary\n' ...
+             'table was set to ' num2str(tspan)]);
+    end
+
     dtc = cumsum([0 dte]);
     switch lower(bctype)       
-        case 'elev'           
-            BCT = p.Results.bc;
+        case 'elev'                     
             zb = interp1(BCT.t,BCT.z,dtc(:));
             zb = zb';
         case 'rate'
-            BCT = p.Results.bc;
             zc = cumtrapz(BCT.t,BCT.dz);
             zb = z(outletix) + interp1(BCT.t,zc,dtc(:));
             zb = zb';      
     end
     
-elseif isa(p.Results.bc,'function_handle') && strcmp(bctype,'elev')
-    % it is a function
-    zb = z(outletix)*0 + cumsum(p.Results.bc(dte));
+elseif isa(p.Results.bc,'function_handle')
+    if strcmp(bctype,'rate')
+        dtc = cumsum([0 dte]);
+        zb = z(outletix) + cumtrapz(dtc,p.Results.bc(dtc));
+    else
+        zb = z(outletix)*0 + cumsum(p.Results.bc(dte));
+    end
 else
     error('Cannot handle boundary conditions')
 end
@@ -233,6 +276,9 @@ if plotit
         d  = chitransform(S,ar,"mn",m/n);
     end
     hh = plotdz(S,z,'color','r','distance',d); 
+    if ~ylimauto
+        ylim(yl)
+    end
     hold on
     if plotchi
         xlabel('\chi [m]')
@@ -372,12 +418,14 @@ end
             tempz = ztp1;
         end
     end
+
 if plotit
     hold off
 end
 
 end
 
+%% Easy handling of nals.
 function z = ezgetnal(S,z)
 if isa(z,'GRIDobj')
     z = double(getnal(S,z));
