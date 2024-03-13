@@ -320,7 +320,8 @@ if n == 1
             end
             if plotcounter > 2
                 for rr = 1:plotcounter
-                    h(rr).Color = [0 0 0 rr/(plotcounter*2)];
+                    % h(rr).Color = [0 0 0 rr/(plotcounter*2)];
+                    h(rr).Color = [0 0 0 exp(rr-plotcounter)];
                 end
             end
             if plotcounter == 1
@@ -385,7 +386,8 @@ elseif n ~= 1
 
             if plotcounter > 2
                 for rr = 1:plotcounter
-                    h(rr).Color = [0 0 0 rr/(plotcounter*2)];
+                    % h(rr).Color = [0 0 0 rr/(plotcounter*2)];
+                    h(rr).Color = [0 0 0 exp(rr-plotcounter)];
                 end
             end
             if plotcounter == 1
