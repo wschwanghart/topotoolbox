@@ -1,6 +1,6 @@
 function OUT = streamorder(FD,WW,type)
 
-%STREAMORDER calculates a stream order GRIDobj from FLOWobj
+%STREAMORDER Calculate stream order based on a FLOWobj and stream grid
 %
 % Syntax
 %
@@ -54,18 +54,20 @@ function OUT = streamorder(FD,WW,type)
 % See also: FLOWobj, FLOWobj/flowacc, STREAMobj/streamorder
 % 
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 4. March, 2016
+% Date: 9. April, 2024
 
 
 % 4/3/2016: the function now makes copies of FD.ix and FD.ixc (see 
 % FLOWobj/flowacc
+% 9/4/2024: bug removed when stream network does not extend to the grid
+% boundaries and order type is shreve
 
 
 %% check input arguments
 narginchk(2,3)
 validatealignment(FD,WW);
 
-if nargin == 2;
+if nargin == 2
     type = 'strahler';
 else
     type = validatestring(type,{'strahler','shreve'},'FLOWobj/streamorder','type',3);
@@ -75,7 +77,7 @@ if ~strcmpi(FD.type,'single')
     error('TopoToolbox:FLOWobj','streamorder requires FLOWobj.type to be single')
 end
 
-if isa(WW,'GRIDobj');
+if isa(WW,'GRIDobj')
     W   = WW.Z;
 else
     W   = WW;
@@ -92,9 +94,9 @@ switch lower(type)
         ix = FD.ix;
         ixc = FD.ixc;
         
-        for r = 1:numel(ix);
+        for r = 1:numel(ix)
             if W(ix(r))
-                if (S(ixc(r)) == S(ix(r))) && VIS(ixc(r));
+                if (S(ixc(r)) == S(ix(r))) && VIS(ixc(r))
                     S(ixc(r)) = S(ixc(r))+offset;
                     VIS(ixc(r)) = true;
                 else
@@ -107,7 +109,8 @@ switch lower(type)
     case 'shreve'
         S = streampoi(FD,W,'channelheads');
         S = flowacc(FD,S);
-        S = uint16(S.Z);        
+        S = uint16(S.Z);
+        S(~W) = 0;
 end
 
 
