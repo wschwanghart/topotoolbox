@@ -112,7 +112,8 @@ if isempty(p.Results.type)
     mind = min(d);
     maxd = max(d);
     
-    dvals = linspace(mind,maxd,n);
+    dvals = linspace(mind,maxd,n+2);
+    dvals = dvals(2:end-1);
     
     ix = P.S.ix';
     ixc = P.S.ixc';

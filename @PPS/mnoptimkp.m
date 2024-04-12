@@ -53,7 +53,7 @@ function results = mnoptimkp(P,FD,varargin)
 %     'weights' npoints(P)x1 vector of weights for each point in P. Default 
 %               is ones(npoints(P),1).
 %     'a0'      reference area (default = 1e6 m^2)
-%     'mn0'     initial value for mn search. 
+%     'mn0'     initial value for mn search (default = 0.45) 
 %     'optimizemn' {true} or false. If false, then the function will not
 %               search for an optimal value of mn but take mn0 (works only
 %               for 'method', 'Deviance')
@@ -99,7 +99,7 @@ function results = mnoptimkp(P,FD,varargin)
 
 p = inputParser;
 addParameter(p,'method','robustvar')
-addParameter(p,'a0',1);
+addParameter(p,'a0',1e6);
 addParameter(p,'mn0',0.45);
 addParameter(p,'optimizemn',true)
 addParameter(p,'weights',[],@(x) numel(x) == npoints(P));
