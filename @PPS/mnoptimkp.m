@@ -108,7 +108,7 @@ addParameter(p,'sigmat',0)
 addParameter(p,'K0',1e-4);
 addParameter(p,'RobustWgtFun',[]);
 addParameter(p,'inletix',[]);
-addParameter(p,'inletA0',[]);
+addParameter(p,'inletA0',0);
 addParameter(p,'inletfraction',[]);
 addParameter(p,'Kint',[0.025 0.975])
 
@@ -257,7 +257,7 @@ switch lower(p.Results.method)
                 results.Ksigma = sigmalocmax/(tini * a0^mn); 
             else
                 % With error of incision
-                results.Ksigma = hypot(stini/tini,sigmalocmax/results.chimax) * (sigmalocmax/(tini*a0^mn));
+                results.Ksigma = hypot(stini/tini,sigmalocmax/results.chimax) * results.K;
             end
             cdfvals      = p.Results.Kint;
             results.Kint = results.Ksigma*icdf('normal',cdfvals,0,1) + results.K;
