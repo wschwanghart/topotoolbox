@@ -41,46 +41,11 @@ validateattributes(d,{'numeric'},{'scalar','>',0},'removeshortstreams','d',2);
 
 % calculate streamorder
 s = streamorder(S);
+I = s == 1;
 
-% downstream distance
-dsdistance = zeros(numel(S.x),1);
-for r=1:numel(S.ix);
-    dsdistance(S.ixc(r)) = max(dsdistance(S.ixc(r)),...
-        dsdistance(S.ix(r)) + ...
-        sqrt((S.x(S.ixc(r))-S.x(S.ix(r)))^2 + (S.y(S.ixc(r))-S.y(S.ix(r)))^2));
-end
-
-keepvertices = true(numel(S.x),1);
-keepvertices(dsdistance<=d & s==1) = false;
-
-for r=numel(S.ix):-1:1;
-    if (s(S.ixc(r)) == 1) && (s(S.ix(r)) == 1);
-        keepvertices(S.ix(r)) = keepvertices(S.ixc(r));
-    end
-end
-
-% adapt new STREAMobj to the reduced network
-L     = keepvertices;
-I     = L(S.ix);
-S.ix  = S.ix(I);
-S.ixc = S.ixc(I);
-
-IX    = cumsum(L);
-S.ix  = IX(S.ix);
-S.ixc = IX(S.ixc);
-
-S.x   = S.x(L);
-S.y   = S.y(L);
-S.IXgrid   = S.IXgrid(L);
-
-S = clean(S);
-
-
-
-
-
-
-
-
-
+S2 = subgraph(S,I);
+c  = aggregate(S2,S2.distance,'method','drainagebasins','aggfun',@max);
+c  = c>d;
+I  = nal2nal(S,S2,c,true);
+S  = subgraph(S,I);
 
