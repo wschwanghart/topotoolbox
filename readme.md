@@ -124,6 +124,7 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 - new function: getgriddedline(see utilities)
 - new function: table2STREAMobj (see IOtools)
 - new function: STREAMobj/bifurcationratio
+- new function: GRIDobj/createrectmask
 
 ### 2.4
 
