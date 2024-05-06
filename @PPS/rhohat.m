@@ -44,6 +44,9 @@ function s = rhohat(P,varargin)
 %     'indcolor'     {'b'}. Indicator color.
 %     'FaceColor'    Color of the confidence bounds.
 %     'FaceAlpha'    Transparency of the confidence bounds.
+%     'scale'        positive scalar. Default is 1. The value is used to
+%                    multiply estimated densities and should only be used
+%                    for plotting purposes.
 %
 % Output arguments
 %
@@ -80,14 +83,14 @@ function s = rhohat(P,varargin)
 % See also: PPS 
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 12. December, 2022
+% Date: 6. May, 2024
 
 % Check input arguments
 p = inputParser;
 p.FunctionName = 'rhohat';
 addRequired(p,'P',@(x) isa(x,'PPS'));
 
-% Standard color
+% Default color
 clr = [0.5059 0.8471 0.8157];
 
 % Add elevation
@@ -110,6 +113,7 @@ addParameter(p,'indlocation','bottom',@(x) ischar(validatestring(x,{'bottom','to
 addParameter(p,'indcolor','b');
 addParameter(p,'indlength',0.03);
 addParameter(p,'bandwidth',[]);
+addParameter(p,'scale',1, @(x) x>0 && isscalar(x))
 
 % Parse
 parse(p,P,varargin{:});
@@ -124,9 +128,9 @@ c = getcovariate(P,p.Results.covariate);
     'weights',p.Results.weights);
 
 in = intensity(P);
-rho  = in*N./Nb;
-rhou = in*Nu./Nb;
-rhol = in*Nl./Nb;
+rho  = in*N./Nb * p.Results.scale;
+rhou = in*Nu./Nb * p.Results.scale;
+rhol = in*Nl./Nb * p.Results.scale;
 
 if p.Results.plot
 

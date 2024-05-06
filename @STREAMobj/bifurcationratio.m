@@ -10,7 +10,10 @@ function [Rb,Ns,s] = bifurcationratio(S)
 %
 %     The bifurcation ratio is the average ratio between the number of
 %     streams of a given order and the number of streams in the next higher
-%     order. 
+%     order. This function calculates the bifurcation ratio for a stream
+%     network stored in a STREAMobj S. The calculation is not performed
+%     for individual basins, but for the entire network. If you want to
+%     calculate the Rb for each basin, please see the example below.
 %
 % Input arguments
 %
@@ -18,7 +21,7 @@ function [Rb,Ns,s] = bifurcationratio(S)
 %     
 % Output arguments
 %
-%     Rb     bifurcation ratio
+%     Rb     bifurcation ratio (scalar)
 %     Ns     Number of streams of a given order, so that Ns(1) is the
 %            number of first order streams, Ns(2) is the number of second
 %            order streams, ...
@@ -34,6 +37,7 @@ function [Rb,Ns,s] = bifurcationratio(S)
 %     Rb = cellfun(@(S) bifurcationratio(S),CS);
 %
 %     % Plot the bifurcation ratio as a node-attribute list
+%     Rbnal = getnal(S);
 %     for r = 1:numel(CS) 
 %         Rbnal = nal2nal(S,CS{r},getnal(CS{r})+Rb(r),Rbnal); 
 %     end
@@ -42,7 +46,7 @@ function [Rb,Ns,s] = bifurcationratio(S)
 % See also: STREAMobj, STREAMobj/streamorder
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 2. May, 2024
+% Date: 6. May, 2024
 
 % Calculate streamorder
 s = streamorder(S);
