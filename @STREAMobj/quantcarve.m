@@ -224,7 +224,7 @@ end
 % set options
 options = optimset('Display','off','algorithm','interior-point'); %'OptimalityTolerance',1e-6,
 
-[bhat,~,~,output] = linprog(f,A,b,Aeq,beq,lb,[],[],options);
+[bhat,~,~,output] = linprog(f,A,b,Aeq,beq,lb,[],options);
 zs = bhat(2*n+1:end);
 
 
