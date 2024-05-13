@@ -39,7 +39,7 @@ function [DEMc,MASK] = crop(DEM,varargin)
 % See also: IND2SUB, GRIDobj/pad, GRIDobj/resample
 %
 % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 7. March, 2018
+% Date: 13. May, 2024
 
 
 narginchk(1,3);
@@ -207,11 +207,11 @@ DEMc.xyunit = DEM.xyunit;
 if ~isempty(DEM.georef)
     % Copy all referencing information
     DEMc.georef = DEM.georef;
-    if ~isgeographic(DEMc)
+    %if ~isgeographic(DEMc)
         DEMc.georef.SpatialRef = refmatToMapRasterReference(DEMc.refmat, DEMc.size);
-    else
-        DEMc.georef.SpatialRef = refmatToGeoRasterReference(DEMc.refmat,DEMc.size);
-    end
+    %else
+    %    DEMc.georef.SpatialRef = refmatToGeoRasterReference(DEMc.refmat,DEMc.size);
+    %end
     
 end
     
