@@ -118,7 +118,7 @@ ZI.Z(inan) = 0;
 if p.Results.ridge == 0
 
     ZI.Z = reshape(A\ZI.Z(:),DEM.size);
-
+    % ZI.Z = reshape(pcg(A,ZI.Z(:)),DEM.size);
 else
 
     Asd  = sparse(ic,icd,1,n,n);
