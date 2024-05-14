@@ -44,7 +44,8 @@ classdef subplotlabel < handle
 %
 %     Applicable if called with fig handle only
 %
-%     'order'       direction of labelling {'rightdown'} or 'downright'
+%     'order'       direction of labelling {'rightdown'}, 'downright' or
+%                   'plotorder'. 
 %
 % Output arguments
 %
@@ -158,7 +159,7 @@ classdef subplotlabel < handle
                     case 'downright'
                         [~,ix] = sortrows(pos,[1 -2]);
                     otherwise 
-                        error('unknown ordering')
+                        ix = numel(hax):-1:1;
                 end   
                
                 hax = hax(ix);
