@@ -66,6 +66,9 @@ if any(I(:))
         'There are some points outside the grid''s borders');
 end
 
+% Check for nans because they cause errors since 2024a
+I = I | isnan(x) | isnan(y);
+
 x(I)    = [];
 y(I)    = [];
 
