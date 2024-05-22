@@ -141,7 +141,7 @@ hButtonExportSHP = uimenu(hMenuExport,'Label','Export streams to Shapefile','Cal
 
 hs = true;
 if hs
-    RGB  = imageschs(DEM,DEM,'colormap',[1 1 1]);
+    RGB  = imageschs(DEM,DEM,'colormap',landcolor);
 else
     RGB  = DEM.Z;
 end

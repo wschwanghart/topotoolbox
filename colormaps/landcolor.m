@@ -89,6 +89,6 @@ J = [ ...
 
 l = length(J);
 if nargin < 1
-	n = 256;
+	n = 255;
 end
 y = interp1(1:l,J,linspace(1,l,n),'*linear');
