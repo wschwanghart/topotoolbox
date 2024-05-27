@@ -125,6 +125,7 @@ resource for code and examples is the [TopoToolbox blog](http://topotoolbox.word
 - new function: table2STREAMobj (see IOtools)
 - new function: STREAMobj/bifurcationratio
 - new function: GRIDobj/createrectmask
+- new function: STREAMobj/plotcategorical
 
 ### 2.4
 
