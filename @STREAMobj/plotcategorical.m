@@ -40,6 +40,9 @@ function [h,hcb] = plotcategorical(S,c,varargin)
 %                   distance values are divided by 1000.
 %     'EdgeColor'   default = 'none'
 %     'FaceAlpha'   default = 1
+%     'alphagrad'   false. If true, then the patches will transition from
+%                   fully opaque at the top to fully transparent at the
+%                   bottom.
 %     'parent'      default = gca
 %     
 % Output arguments
@@ -75,6 +78,7 @@ addParameter(p,'dunit','m')
 addParameter(p,'EdgeColor','none')
 addParameter(p,'FaceAlpha',1)
 addParameter(p,'parent',gca)
+addParameter(p,'alphagrad',false)
 addParameter(p,'ztop',1,@(x) isnal(S,x) || isscalar(x))
 addParameter(p,'zbot',0,@(x) isnal(S,x) || isscalar(x))
 
@@ -161,15 +165,31 @@ I = [true; diff(c) ~= 0];
 I(end) = true;
 ix = find(I);
 
+% FaceVertexAlphaData
+if ~(p.Results.alphagrad)
+    fa  = p.Results.FaceAlpha;
+    fag = [];
+    usefag = false;
+else
+    fa = 'interp';
+    fag = [];
+    usefag = true;
+end
+
+
 if ~zvar
     for r = 1:numel(ix)-1
         ixl = ix(r);
         ixr = ix(r+1);
         X   = d([ixl ixr ixr ixl ixl]);
         Y   = [zbot([ixl ixr]); ztop([ixr ixl]); zbot(ixl)];
+        if usefag
+            fag = [0 0 1 1 0]';
+        end
         hout(r) = patch(ax,X(:),Y(:),clr(c(ixl),:),...
-            'FaceAlpha',p.Results.FaceAlpha,...
-            'EdgeColor',p.Results.EdgeColor);
+            'FaceAlpha',fa,...
+            'EdgeColor',p.Results.EdgeColor,...
+            'FaceVertexAlphaData',fag);
     end
 else
     for r = 1:numel(ix)-1
@@ -178,9 +198,17 @@ else
         ixx = ixl:ixr;
         X   = d([ixx ixx(end:-1:1) ixx(1)]);
         Y   = [zbot(ixx); ztop(ixx(end:-1:1)); zbot(ixx(1))];
+        if usefag
+            fag = [zeros(numel(ixx),1);ones(numel(ixx),1);0];
+        
+        end
         hout(r) = patch(ax,X(:),Y(:),clr(c(ixl),:),...
-            'FaceAlpha',p.Results.FaceAlpha,...
-            'EdgeColor',p.Results.EdgeColor);
+            'FaceAlpha',fa,...
+            'EdgeColor',p.Results.EdgeColor,...
+            'FaceVertexAlphaData',fag);
+        if usefag
+            set(hout(r),'FaceAlpha','interp')
+        end
     end
 end
 
