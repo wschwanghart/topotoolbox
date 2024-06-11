@@ -62,10 +62,13 @@ IX2 = round(IX2);
 
 I = IX1>D.size(2) | IX1<1 | IX2>D.size(1) | IX2<1;
 
-if any(I(:));
+if any(I(:))
     warning('TopoToolbox:outsidegrid',...
         'There are some points outside the grid''s borders');
 end
+
+% Check for nans because they cause errors since 2024a
+I = I | isnan(x) | isnan(y);
 
 x(I)    = [];
 y(I)    = [];
