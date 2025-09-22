@@ -338,7 +338,9 @@ if ~isa(A,'logical')
     elseif cbar && ~isempty(p.Results.caxis)
         alims = sort(p.Results.caxis,'ascend');
     else
-        alims = [min(A(:)) max(A(:))];
+        
+        alims = sort(p.Results.caxis,'ascend');
+        % alims = [min(A(:)) max(A(:))];
     end
     
     A = gray2ind(mat2gray(A,double(alims)),ncolors);

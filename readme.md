@@ -4,6 +4,8 @@
 
 [![View TopoToolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/50124-topotoolbox)
 
+**Development of TopoToolbox continues in [version 3](https://github.com/TopoToolbox/topotoolbox3). This version will no longer be developed further, as our focus and resources are now dedicated to advancing version 3. We encourage all users to transition to version 3 to benefit from the latest features, improvements, and ongoing support. Note that version 3 will need MATLAB R2023b or newer.**
+
 [TopoToolbox](http://topotoolbox.wordpress.com) provides a set of Matlab functions that support the analysis
 of relief and flow pathways in digital elevation models. The major 
 aim of TopoToolbox is to offer helpful analytical GIS utilities in a 

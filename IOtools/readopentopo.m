@@ -104,7 +104,7 @@ function DEM = readopentopo(varargin)
 
 p = inputParser;
 addParameter(p,'filename',[tempname '.tif']);
-addParameter(p,'interactive',true);
+addParameter(p,'interactive',false);
 addParameter(p,'extent',[]);
 addParameter(p,'addmargin',0.01);
 addParameter(p,'north',37.091337);
